@@ -90,7 +90,7 @@ class SendgridBackend(BaseEmailBackend):
 
                 attachment.filename = filename
                 # todo: Read content if stream?
-                attachment.content = content
+                attachment.content = base64.b64encode(content)
                 attachment.type = mimetype
 
             mail.add_attachment(attachment)
