@@ -1,5 +1,7 @@
 import base64
 from email.mime.base import MIMEBase
+import mimetypes
+import uuid
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -76,10 +78,14 @@ class SendgridBackend(BaseEmailBackend):
             attachment = Attachment()
 
             if isinstance(attch, MIMEBase):
-                attachment.filename = attch.get_filename()
+                filename = attch.get_filename()
+                if not filename:
+                    ext = mimetypes.guess_extension(attch.get_content_type())
+                    filename = "part-{0}{1}".format(uuid.uuid4().hex, ext)
+                attachment.filename = filename
                 # todo: Read content if stream?
-                attachment.content = base64.b64encode(attch.content)
-                attachment.type = attch._subtype
+                attachment.content = base64.b64encode(attch.get_payload())
+                attachment.type = attch.get_content_type()
                 content_id = attch.get("Content-ID")
                 if content_id:
                     attachment.content_id = content_id
