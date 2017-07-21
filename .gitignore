@@ -2,3 +2,4 @@ venv
 *.sublime-*
 dist/
 *.egg-info/
+*.pyc

@@ -93,9 +93,15 @@ class SendgridBackend(BaseEmailBackend):
             mail.add_attachment(attachment)
 
         if isinstance(msg, EmailMultiAlternatives):
+            alts = False
             for alt in msg.alternatives:
                 if alt[1] == "text/html":
+                    alts = True
                     mail.add_content(Content(alt[1], alt[0]))
+
+            if not alts:
+                mail.add_content(Content("text/plain", msg.body))
+
         elif msg.content_subtype == "html":
             mail.add_content(Content("text/plain", " "))
             mail.add_content(Content("text/html", msg.body))
