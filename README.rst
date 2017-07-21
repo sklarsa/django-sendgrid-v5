@@ -1,4 +1,5 @@
-## How to Install
+How to Install
+--------------
 
 1. `pip install django-sendgrid-v4`
 2. In your project's `settings.py` script:
@@ -6,6 +7,7 @@
 	b. Add `SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]`
 
 
-### Todos:
+Todos:
+------
 
 1. Test this thing
