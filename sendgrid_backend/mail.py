@@ -21,8 +21,8 @@ class SendgridBackend(BaseEmailBackend):
     def __init__(self, *args, **kwargs):
         super(SendgridBackend, self).__init__(*args, **kwargs)
 
-        if "SENDGRID_API_KEY" in settings:
-            self.sg = sendgrid.SendGridAPIClient(api_key=settings["SENDGRID_API_KEY"])
+        if hasattr(settings, "SENDGRID_API_KEY"):
+            self.sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
         elif "api_key" in kwargs:
             self.sg = sendgrid.SendGridAPIClient(api_key=kwargs["api_key"])
         else:
