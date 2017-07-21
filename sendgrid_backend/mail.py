@@ -58,8 +58,11 @@ class SendgridBackend(BaseEmailBackend):
 
         personalization.subject = msg.subject
 
-        for k, v in msg.extra_headers:
-            personalization.add_header(Header(k, v))
+        for k, v in msg.extra_headers.items():
+            if k.lower() == "reply-to":
+                mail.reply_to = Email(v)
+            else:
+                personalization.add_header(Header(k, v))
 
         if hasattr(msg, "template_id"):
             mail.set_template_id(msg.template_id)
