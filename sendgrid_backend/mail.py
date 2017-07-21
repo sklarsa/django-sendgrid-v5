@@ -34,6 +34,7 @@ class SendgridBackend(BaseEmailBackend):
         success = 0
         for msg in email_messages:
             data = self._build_sg_mail(msg)
+
             try:
                 self.sg.client.mail.send.post(request_body=data)
                 success += 1
@@ -84,7 +85,7 @@ class SendgridBackend(BaseEmailBackend):
                     filename = "part-{0}{1}".format(uuid.uuid4().hex, ext)
                 attachment.filename = filename
                 # todo: Read content if stream?
-                attachment.content = base64.b64encode(attch.get_payload())
+                attachment.content = attch.get_payload().replace("\n", "")
                 attachment.type = attch.get_content_type()
                 content_id = attch.get("Content-ID")
                 if content_id:
