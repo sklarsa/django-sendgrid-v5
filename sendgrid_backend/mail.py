@@ -40,7 +40,7 @@ class SendgridBackend(BaseEmailBackend):
                     raise
         return success
 
-    def _build_sg_mail(msg):
+    def _build_sg_mail(self, msg):
         mail = Mail()
 
         mail.from_email = Email(msg.from_email)
