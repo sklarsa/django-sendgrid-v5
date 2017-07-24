@@ -1,8 +1,14 @@
 .. |travis| image:: https://travis-ci.org/sklarsa/django-sendgrid-v4.svg
 	  		 :alt: Travis Build Status
 	  		 :target: https://travis-ci.org/sklarsa/django-sendgrid-v4
+.. |pypi| image:: https://img.shields.io/pypi/v/django-sendgrid-v4.svg
+		   :alt: Latest Release
+    	   :target: https://pypi.python.org/pypi/django-sendgrid-v4/0.2.0a
 
-|travis|
+
+django-sendgrid-v4
+==================
+|pypi| |travis|
 
 How to Install
 --------------
