@@ -13,10 +13,7 @@ from sendgrid.helpers.mail import (
     Attachment, Category, Content, Email, Header, Mail, Personalization, Substitution
 )
 
-try:
-    from urllib.error import HTTPError
-except ImportError:
-    from urllib2 import HTTPError
+from python_http_client.exceptions import HTTPError
 
 
 class SendgridBackend(BaseEmailBackend):
