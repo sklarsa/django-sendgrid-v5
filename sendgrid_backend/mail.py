@@ -79,6 +79,17 @@ class SendgridBackend(BaseEmailBackend):
 
         mail.add_personalization(personalization)
 
+        if hasattr(msg, "reply_to"):
+            if msg.reply_to and mail.reply_to and msg.reply_to != mail.reply_to:
+                raise ValueError("Sendgrid only allows 1 email in the reply-to field.  " +
+                                 "A different reply-to is specified in a header than exists in the reply_to property.")
+            if not isinstance(msg.reply_to, basestring):
+                if len(msg.reply_to) > 1:
+                    raise ValueError("Sendgrid only allows 1 email in the reply-to field")
+                mail.reply_to = Email(*self._parse_email_address(msg.reply_to[0]))
+            else:
+                mail.reply_to = Email(*self._parse_email_address(msg.reply_to))
+
         for attch in msg.attachments:
             attachment = Attachment()
 
