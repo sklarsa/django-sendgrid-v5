@@ -1,3 +1,5 @@
+.. |travis| image:: https://travis-ci.org/sklarsa/django-sendgrid-v4.svg?branch=master
+
 How to Install
 --------------
 
