@@ -1,5 +1,6 @@
 import base64
 from email.mime.base import MIMEBase
+import email.utils
 import mimetypes
 import uuid
 
@@ -40,21 +41,27 @@ class SendgridBackend(BaseEmailBackend):
                     raise
         return success
 
+    def _parse_email_address(self, address):
+        name, addr = email.utils.parseaddr(address)
+        if not name:
+            name = None
+        return addr, name
+
     def _build_sg_mail(self, msg):
         mail = Mail()
 
-        mail.from_email = Email(msg.from_email)
+        mail.from_email = Email(*self._parse_email_address(msg.from_email))
         mail.subject = msg.subject
 
         personalization = Personalization()
         for addr in msg.to:
-            personalization.add_to(Email(addr))
+            personalization.add_to(Email(*self._parse_email_address(addr)))
 
         for addr in msg.cc:
-            personalization.add_cc(Email(addr))
+            personalization.add_cc(Email(*self._parse_email_address(addr)))
 
         for addr in msg.bcc:
-            personalization.add_bcc(Email(addr))
+            personalization.add_bcc(Email(*self._parse_email_address(addr)))
 
         personalization.subject = msg.subject
 
