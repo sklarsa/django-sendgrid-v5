@@ -2,6 +2,7 @@ import base64
 from email.mime.base import MIMEBase
 import email.utils
 import mimetypes
+import sys
 import uuid
 
 from django.conf import settings
@@ -15,6 +16,9 @@ from sendgrid.helpers.mail import (
 )
 
 from python_http_client.exceptions import HTTPError
+
+if sys.version >= (3.0, 0.0):
+    basestring = str
 
 
 class SendgridBackend(BaseEmailBackend):
