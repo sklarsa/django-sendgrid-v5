@@ -83,13 +83,14 @@ class SendgridBackend(BaseEmailBackend):
 
         mail.add_personalization(personalization)
 
-        if hasattr(msg, "reply_to"):
-            if msg.reply_to and mail.reply_to:
+        if hasattr(msg, "reply_to") and msg.reply_to:
+            if mail.reply_to:
                 # If this code path is triggered, the reply_to on the sg mail was set in a header above
                 reply_to = Email(*self._parse_email_address(msg.reply_to))
                 if reply_to.email != mail.reply_to.email or reply_to.name != mail.reply_to.name:
                     raise ValueError("Sendgrid only allows 1 email in the reply-to field.  " +
                                      "Reply-To header value != reply_to property value.")
+
             if not isinstance(msg.reply_to, basestring):
                 if len(msg.reply_to) > 1:
                     raise ValueError("Sendgrid only allows 1 email in the reply-to field")

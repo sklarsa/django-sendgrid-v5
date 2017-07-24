@@ -1,3 +1,5 @@
+import base64
+from email.MIMEImage import MIMEImage
 import unittest
 
 from django.conf import settings
@@ -143,14 +145,35 @@ class TestMailGeneration(unittest.TestCase):
         result = self.backend._build_sg_mail(msg)
         self.assertDictEqual(result["reply_to"], {"email": "sam.smith@example.com", "name": "Sam Smith"})
 
+    def test_mime(self):
+        msg = EmailMultiAlternatives(
+            subject="Hello, World!",
+            body="",
+            from_email="Sam Smith <sam.smith@example.com>",
+            to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
+        )
+
+        content = '<body><img src="cid:linux_penguin" /></body>'
+        msg.attach_alternative(content, "text/html")
+        with open("test/linux-penguin.png", "rb") as f:
+            img = MIMEImage(f.read())
+            img.add_header("Content-ID", "linux_penguin")
+            msg.attach(img)
+
+        result = self.backend._build_sg_mail(msg)
+        self.assertEqual(len(result["content"]), 1)
+        self.assertDictEqual(result["content"][0], {"type": "text/html", "value": content})
+        self.assertEqual(len(result["attachments"]), 1)
+        with open("test/linux-penguin.png", "rb") as f:
+            self.assertEqual(result["attachments"][0]["content"], base64.b64encode(f.read()))
+        self.assertEqual(result["attachments"][0]["type"], "image/png")
+
     """
     todo: Implement these
     def test_attachments(self):
         pass
-
-    def test_mime(self):
-        pass
     """
+
 
 if __name__ == "__main__":
     unittest.main()
