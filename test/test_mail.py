@@ -170,7 +170,10 @@ class TestMailGeneration(unittest.TestCase):
         self.assertDictEqual(result["content"][0], {"type": "text/html", "value": content})
         self.assertEqual(len(result["attachments"]), 1)
         with open("test/linux-penguin.png", "rb") as f:
-            self.assertEqual(result["attachments"][0]["content"], base64.b64encode(f.read()))
+            if sys.version_info >= (3.0, 0.0, ):
+                self.assertEqual(bytearray(result["attachments"][0]["content"]), base64.b64encode(f.read()))
+            else:
+                self.assertEqual(result["attachments"][0]["content"], base64.b64encode(f.read()))
         self.assertEqual(result["attachments"][0]["type"], "image/png")
 
     """
