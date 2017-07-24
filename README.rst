@@ -3,7 +3,7 @@
 	  		 :target: https://travis-ci.org/sklarsa/django-sendgrid-v4
 .. |pypi| image:: https://img.shields.io/pypi/v/django-sendgrid-v4.svg
 		   :alt: Latest Release
-    	   :target: https://pypi.python.org/pypi/django-sendgrid-v4/0.2.0a
+    	   :target: https://pypi.python.org/pypi/django-sendgrid-v4/0.5.0a
 
 
 django-sendgrid-v4
