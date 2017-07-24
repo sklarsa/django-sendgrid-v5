@@ -17,7 +17,7 @@ from sendgrid.helpers.mail import (
 
 from python_http_client.exceptions import HTTPError
 
-if sys.version >= (3.0, 0.0):
+if sys.version_info >= (3.0, 0.0):
     basestring = str
 
 
