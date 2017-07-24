@@ -3,3 +3,5 @@ venv
 dist/
 *.egg-info/
 *.pyc
+.coverage
+.noseids

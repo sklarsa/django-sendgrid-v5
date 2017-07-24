@@ -6,9 +6,3 @@ How to Install
 
  	a. Set `EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"`
  	b. Add `SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]`
-
-
-Todos:
-------
-
-1. Test this thing
