@@ -1,11 +1,16 @@
 import base64
-from email.MIMEImage import MIMEImage
+import sys
 import unittest
 
 from django.conf import settings
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 
 from sendgrid_backend.mail import SendgridBackend
+
+if sys.version_info >= (3.0, 0.0, ):
+    from email.mime.image import MIMEImage
+else:
+    from email.MIMEImage import MIMEImage
 
 
 settings.configure(
