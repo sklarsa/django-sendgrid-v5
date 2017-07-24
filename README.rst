@@ -1,4 +1,8 @@
-.. |travis| image:: https://travis-ci.org/sklarsa/django-sendgrid-v4.svg?branch=master
+.. |travis| image:: https://travis-ci.org/sklarsa/django-sendgrid-v4.svg
+	  		 :alt: Travis Build Status
+	  		 :target: https://travis-ci.org/sklarsa/django-sendgrid-v4
+
+|travis|
 
 How to Install
 --------------
