@@ -13,7 +13,7 @@ setup(
     description="An implementation of Django's EmailBackend compatible with sendgrid-python v4+",
     long_description=long_description,
     url="https://github.com/sklarsa/django-sendgrid-v4",
-    license="WTFPL",
+    license="MIT",
     author="Steven Sklar",
     author_email="sklarsa@gmail.com",
     classifiers=[
