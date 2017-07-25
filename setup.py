@@ -9,7 +9,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name="django-sendgrid-v4",
-    version="0.6.2a",
+    version="0.6.3a",
     description="An implementation of Django's EmailBackend compatible with sendgrid-python v4+",
     long_description=long_description,
     url="https://github.com/sklarsa/django-sendgrid-v4",
@@ -28,5 +28,5 @@ setup(
     ],
     keywords="django email sendgrid backend",
     packages=find_packages(exclude=["test", ]),
-    install_requires=["django >=1.8", "sendgrid >=4.0.0"]
+    install_requires=["django >=1.8", "sendgrid >=4.0.0", "python-http-client >=2.3.0"]
 )
