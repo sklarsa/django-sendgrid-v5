@@ -1,9 +1,9 @@
 import base64
 import sys
-import unittest
 
 from django.conf import settings
 from django.core.mail import EmailMessage, EmailMultiAlternatives
+from django.test.testcases import SimpleTestCase
 
 from sendgrid_backend.mail import SendgridBackend
 
@@ -19,11 +19,13 @@ settings.configure(
 )
 
 
-class TestMailGeneration(unittest.TestCase):
+class TestMailGeneration(SimpleTestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
+        super(TestMailGeneration, self).setUpClass()
+
         self.backend = SendgridBackend()
-        self.maxDiff = None
 
     def test_EmailMessage(self):
         msg = EmailMessage(

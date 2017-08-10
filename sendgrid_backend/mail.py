@@ -22,15 +22,23 @@ if sys.version_info >= (3.0, 0.0):
 
 
 class SendgridBackend(BaseEmailBackend):
+    """
+    Inherits from and implements the required methods of django.core.mail.backends.base.BaseEmailBackend
+    using the sendgrid python api (v4.0+)
+
+    This class uses the api key set in the django setting, SENDGRID_API_KEY.  If you have not set this value (or wish
+    to override it), this backend accepts an api_key argument that supersedes the django setting
+    """
     def __init__(self, *args, **kwargs):
         super(SendgridBackend, self).__init__(*args, **kwargs)
 
-        if hasattr(settings, "SENDGRID_API_KEY"):
-            self.sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
-        elif "api_key" in kwargs:
+        if "api_key" in kwargs:
             self.sg = sendgrid.SendGridAPIClient(api_key=kwargs["api_key"])
+        elif hasattr(settings, "SENDGRID_API_KEY") and settings.SENDGRID_API_KEY:
+            self.sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
         else:
-            raise ImproperlyConfigured("settings.py must contain a value for SENDGRID_API_KEY")
+            raise ImproperlyConfigured("settings.py must contain a value for SENDGRID_API_KEY.  " +
+                                       "You may also pass a value to the api_key argument (optional).")
 
     def send_messages(self, email_messages):
         success = 0
