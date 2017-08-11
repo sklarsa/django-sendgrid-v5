@@ -14,6 +14,6 @@ python:
   - "nightly" # currently points to 3.7-dev
 install:
   - "pip install -r dev-requirements.txt"
-  - "pip install sendgrid==4.2.0"
+  - "pip install sendgrid"
   - "pip install django==$DJANGO_VERSION"
 script: nosetests -c nose.cfg
