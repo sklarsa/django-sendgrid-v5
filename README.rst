@@ -6,7 +6,7 @@
            :target: https://pypi.python.org/pypi/django-sendgrid-v5/
 
 
-django-sendgrid-v4
+django-sendgrid-v5
 ==================
 |pypi| |travis|
 
