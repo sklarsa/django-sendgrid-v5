@@ -24,7 +24,7 @@ if sys.version_info >= (3.0, 0.0):
 class SendgridBackend(BaseEmailBackend):
     """
     Inherits from and implements the required methods of django.core.mail.backends.base.BaseEmailBackend
-    using the sendgrid python api (v4.0+)
+    using the sendgrid python api (v5.0+)
 
     This class uses the api key set in the django setting, SENDGRID_API_KEY.  If you have not set this value (or wish
     to override it), this backend accepts an api_key argument that supersedes the django setting
