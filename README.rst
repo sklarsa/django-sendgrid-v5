@@ -1,9 +1,9 @@
 .. |travis| image:: https://travis-ci.org/sklarsa/django-sendgrid-v4.svg
              :alt: Travis Build Status
              :target: https://travis-ci.org/sklarsa/django-sendgrid-v4
-.. |pypi| image:: https://img.shields.io/pypi/v/django-sendgrid-v4.svg
+.. |pypi| image:: https://img.shields.io/pypi/v/django-sendgrid-v5.svg
            :alt: Latest Release
-           :target: https://pypi.python.org/pypi/django-sendgrid-v4/
+           :target: https://pypi.python.org/pypi/django-sendgrid-v5/
 
 
 django-sendgrid-v4
@@ -13,7 +13,7 @@ django-sendgrid-v4
 How to Install
 --------------
 
-1. `pip install django-sendgrid-v4`
+1. `pip install django-sendgrid-v5`
 2. In your project's `settings.py` script:
 
     a. Set `EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"`
