@@ -13,5 +13,3 @@ class TestBackendInit(SimpleTestCase):
 
         with self.assertRaises(ImproperlyConfigured):
             backend = SendgridBackend()
-
-
