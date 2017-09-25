@@ -10,11 +10,17 @@ django-sendgrid-v5
 ==================
 |pypi| |travis|
 
+This package implements an email backend for Django that relies on sendgrid's REST API for message delivery.
+
+It is under active development, and pull requests are more than welcome!
+
 How to Install
 --------------
 
-1. `pip install django-sendgrid-v5`
-2. In your project's `settings.py` script:
+1. :code:`pip install django-sendgrid-v5`
 
-    a. Set `EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"`
-    b. Add `SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]`
+2. In your project's settings.py script:
+
+   a. Set :code:`EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"`
+    
+   b. Add :code:`SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]`
