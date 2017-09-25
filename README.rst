@@ -1,6 +1,6 @@
-.. |travis| image:: https://travis-ci.org/sklarsa/django-sendgrid-v4.svg
+.. |travis| image:: https://travis-ci.org/sklarsa/django-sendgrid-v5.svg
              :alt: Travis Build Status
-             :target: https://travis-ci.org/sklarsa/django-sendgrid-v4
+             :target: https://travis-ci.org/sklarsa/django-sendgrid-v5
 .. |pypi| image:: https://img.shields.io/pypi/v/django-sendgrid-v5.svg
            :alt: Latest Release
            :target: https://pypi.python.org/pypi/django-sendgrid-v5/
