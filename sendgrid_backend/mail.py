@@ -48,7 +48,7 @@ class SendgridBackend(BaseEmailBackend):
             try:
                 self.sg.client.mail.send.post(request_body=data)
                 success += 1
-            except HTTPError as e:
+            except HTTPError:
                 if not self.fail_silently:
                     raise
         return success
@@ -134,15 +134,10 @@ class SendgridBackend(BaseEmailBackend):
             mail.add_attachment(attachment)
 
         if isinstance(msg, EmailMultiAlternatives):
-            alts = False
+            mail.add_content(Content("text/plain", msg.body))
             for alt in msg.alternatives:
                 if alt[1] == "text/html":
-                    alts = True
                     mail.add_content(Content(alt[1], alt[0]))
-
-            if not alts:
-                mail.add_content(Content("text/plain", msg.body))
-
         elif msg.content_subtype == "html":
             mail.add_content(Content("text/plain", " "))
             mail.add_content(Content("text/html", msg.body))

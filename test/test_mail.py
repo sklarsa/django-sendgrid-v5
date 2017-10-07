@@ -77,7 +77,7 @@ class TestMailGeneration(SimpleTestCase):
     def test_EmailMultiAlternatives(self):
         msg = EmailMultiAlternatives(
             subject="Hello, World!",
-            body="",
+            body=" ",
             from_email="Sam Smith <sam.smith@example.com>",
             to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
             cc=["Stephanie Smith <stephanie.smith@example.com>"],
@@ -115,8 +115,11 @@ class TestMailGeneration(SimpleTestCase):
             },
             "subject": "Hello, World!",
             "content": [{
+                "type": "text/plain",
+                "value": " ",
+            }, {
                 "type": "text/html",
-                "value": "<body<div>Hello World!</div></body>"
+                "value": "<body<div>Hello World!</div></body>",
             }]
         }
 
@@ -155,7 +158,7 @@ class TestMailGeneration(SimpleTestCase):
     def test_mime(self):
         msg = EmailMultiAlternatives(
             subject="Hello, World!",
-            body="",
+            body=" ",
             from_email="Sam Smith <sam.smith@example.com>",
             to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
         )
@@ -168,8 +171,9 @@ class TestMailGeneration(SimpleTestCase):
             msg.attach(img)
 
         result = self.backend._build_sg_mail(msg)
-        self.assertEqual(len(result["content"]), 1)
-        self.assertDictEqual(result["content"][0], {"type": "text/html", "value": content})
+        self.assertEqual(len(result["content"]), 2)
+        self.assertDictEqual(result["content"][0], {"type": "text/plain", "value": " "})
+        self.assertDictEqual(result["content"][1], {"type": "text/html", "value": content})
         self.assertEqual(len(result["attachments"]), 1)
         with open("test/linux-penguin.png", "rb") as f:
             if sys.version_info >= (3.0, 0.0, ):
@@ -183,7 +187,3 @@ class TestMailGeneration(SimpleTestCase):
     def test_attachments(self):
         pass
     """
-
-
-if __name__ == "__main__":
-    unittest.main()
