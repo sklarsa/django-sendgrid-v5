@@ -3,6 +3,7 @@ import sys
 
 from django.conf import settings
 from django.core.mail import EmailMessage, EmailMultiAlternatives
+from django.test import override_settings
 from django.test.testcases import SimpleTestCase
 
 from sendgrid_backend.mail import SendgridBackend
@@ -13,19 +14,17 @@ else:
     from email.MIMEImage import MIMEImage
 
 
-settings.configure(
-    EMAIL_BACKEND="sendgrid_backend.SendgridBackend",
-    SENDGRID_API_KEY="DUMMY_API_KEY",
-)
-
-
 class TestMailGeneration(SimpleTestCase):
+
+    # Any assertDictEqual failures will show the entire diff instead of just a snippet
+    maxDiff = None
 
     @classmethod
     def setUpClass(self):
         super(TestMailGeneration, self).setUpClass()
-
-        self.backend = SendgridBackend()
+        with override_settings(EMAIL_BACKEND="sendgrid_backend.SendgridBackend",
+                           SENDGRID_API_KEY="DUMMY_API_KEY"):
+            self.backend = SendgridBackend()
 
     def test_EmailMessage(self):
         msg = EmailMessage(
@@ -60,6 +59,11 @@ class TestMailGeneration(SimpleTestCase):
             "from": {
                 "email": "sam.smith@example.com",
                 "name": "Sam Smith"
+            },
+            "mail_settings": {
+                "sandbox_mode": {
+                    "enable": False
+                }
             },
             "reply_to": {
                 "email": "sam.smith@example.com",
@@ -109,6 +113,11 @@ class TestMailGeneration(SimpleTestCase):
                 "email": "sam.smith@example.com",
                 "name": "Sam Smith"
             },
+            "mail_settings": {
+                "sandbox_mode": {
+                    "enable": False
+                }
+            },
             "reply_to": {
                 "email": "sam.smith@example.com",
                 "name": "Sam Smith"
@@ -124,9 +133,6 @@ class TestMailGeneration(SimpleTestCase):
         }
 
         self.assertDictEqual(result, expected)
-
-    def test_headers(self):
-        pass
 
     def test_reply_to(self):
         kwargs = {
@@ -186,4 +192,8 @@ class TestMailGeneration(SimpleTestCase):
     todo: Implement these
     def test_attachments(self):
         pass
+
+    def test_headers(self):
+        pass
+
     """

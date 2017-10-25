@@ -4,7 +4,7 @@
 .. |pypi| image:: https://img.shields.io/pypi/v/django-sendgrid-v5.svg
            :alt: Latest Release
            :target: https://pypi.python.org/pypi/django-sendgrid-v5/
-
+.. _sandbox mode: https://sendgrid.com/docs/Classroom/Send/v3_Mail_Send/sandbox_mode.html
 
 django-sendgrid-v5
 ==================
@@ -22,5 +22,7 @@ How to Install
 2. In your project's settings.py script:
 
    a. Set :code:`EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"`
-    
+
    b. Add :code:`SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]`
+
+   c. To toggle `sandbox mode`_ (when django is running in DEBUG mode), set :code:`SENDGRID_SANDBOX_MODE_IN_DEBUG =  True/False`.  This value is True by default.
