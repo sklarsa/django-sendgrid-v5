@@ -12,7 +12,7 @@ from django.core.mail.backends.base import BaseEmailBackend
 
 import sendgrid
 from sendgrid.helpers.mail import (
-    Attachment, Category, Content, Email, Header, Mail, Personalization, Substitution
+    Attachment, Category, Content, Email, Header, Mail, MailSettings, Personalization, SandBoxMode, Substitution
 )
 
 from python_http_client.exceptions import HTTPError
@@ -39,6 +39,15 @@ class SendgridBackend(BaseEmailBackend):
         else:
             raise ImproperlyConfigured("settings.py must contain a value for SENDGRID_API_KEY.  " +
                                        "You may also pass a value to the api_key argument (optional).")
+
+        sandbox_mode_in_debug = True
+        if hasattr(settings, "SENDGRID_SANDBOX_MODE_IN_DEBUG"):
+            sandbox_mode_in_debug = settings.SENDGRID_SANDBOX_MODE_IN_DEBUG
+
+        if settings.DEBUG and sandbox_mode_in_debug:
+            self.sandbox_mode = True
+        else:
+            self.sandbox_mode = False
 
     def send_messages(self, email_messages):
         success = 0
@@ -147,5 +156,9 @@ class SendgridBackend(BaseEmailBackend):
         if hasattr(msg, "categories"):
             for cat in msg.categories:
                 mail.add_category(Category(cat))
+
+        mail_settings = MailSettings()
+        mail_settings.sandbox_mode = SandBoxMode(self.sandbox_mode)
+        mail.mail_settings = mail_settings
 
         return mail.get()

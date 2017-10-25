@@ -7,7 +7,7 @@ from sendgrid_backend.mail import SendgridBackend
 
 class TestBackendInit(SimpleTestCase):
 
-    @override_settings(SENDGRID_API_KEY=None)
+    @override_settings(EMAIL_BACKEND="sendgrid_backend.SendgridBackend", SENDGRID_API_KEY=None)
     def test_init_no_setting(self):
         backend = SendgridBackend(api_key="DUMMY_API_KEY")
 
