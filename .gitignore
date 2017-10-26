@@ -1,6 +1,7 @@
 venv
 *.sublime-*
 dist/
+build/
 *.egg-info/
 *.pyc
 .coverage
