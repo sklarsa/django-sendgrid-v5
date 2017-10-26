@@ -44,10 +44,7 @@ class SendgridBackend(BaseEmailBackend):
         if hasattr(settings, "SENDGRID_SANDBOX_MODE_IN_DEBUG"):
             sandbox_mode_in_debug = settings.SENDGRID_SANDBOX_MODE_IN_DEBUG
 
-        if settings.DEBUG and sandbox_mode_in_debug:
-            self.sandbox_mode = True
-        else:
-            self.sandbox_mode = False
+        self.sandbox_mode = settings.DEBUG and sandbox_mode_in_debug
 
     def send_messages(self, email_messages):
         success = 0
