@@ -162,5 +162,4 @@ class SendgridBackend(BaseEmailBackend):
         tracking_settings.open_tracking = OpenTracking(True)
         mail.tracking_settings = tracking_settings
 
-
         return mail.get()
