@@ -70,6 +70,7 @@ class TestMailGeneration(SimpleTestCase):
                 "name": "Sam Smith"
             },
             "subject": "Hello, World!",
+            "tracking_settings": {"open_tracking": {"enable": True}},
             "content": [{
                 "type": "text/plain",
                 "value": "Hello, World!"
@@ -123,6 +124,7 @@ class TestMailGeneration(SimpleTestCase):
                 "name": "Sam Smith"
             },
             "subject": "Hello, World!",
+            "tracking_settings": {"open_tracking": {"enable": True}},
             "content": [{
                 "type": "text/plain",
                 "value": " ",

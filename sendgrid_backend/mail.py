@@ -12,7 +12,7 @@ from django.core.mail.backends.base import BaseEmailBackend
 
 import sendgrid
 from sendgrid.helpers.mail import (
-    Attachment, Category, Content, Email, Header, Mail, MailSettings, Personalization, SandBoxMode, Substitution
+    Attachment, Category, Content, Email, Header, Mail, MailSettings, OpenTracking, Personalization, SandBoxMode, Substitution, TrackingSettings
 )
 
 from python_http_client.exceptions import HTTPError
@@ -45,6 +45,12 @@ class SendgridBackend(BaseEmailBackend):
             sandbox_mode_in_debug = settings.SENDGRID_SANDBOX_MODE_IN_DEBUG
 
         self.sandbox_mode = settings.DEBUG and sandbox_mode_in_debug
+        
+        track_email = True
+        if hasattr(settings, "SENDGRID_TRACK_EMAIL_OPENS"):
+            track_email = settings.SENDGRID_TRACK_EMAIL_OPENS
+
+        self.track_email = track_email
 
     def send_messages(self, email_messages):
         success = 0
@@ -157,5 +163,9 @@ class SendgridBackend(BaseEmailBackend):
         mail_settings = MailSettings()
         mail_settings.sandbox_mode = SandBoxMode(self.sandbox_mode)
         mail.mail_settings = mail_settings
+
+        tracking_settings = TrackingSettings()
+        tracking_settings.open_tracking = OpenTracking(self.track_email)
+        mail.tracking_settings = tracking_settings
 
         return mail.get()
