@@ -45,6 +45,12 @@ class SendgridBackend(BaseEmailBackend):
             sandbox_mode_in_debug = settings.SENDGRID_SANDBOX_MODE_IN_DEBUG
 
         self.sandbox_mode = settings.DEBUG and sandbox_mode_in_debug
+        
+        track_email = True
+        if hasattr(settings, "SENDGRID_TRACK_EMAIL_OPENS"):
+            track_email = settings.SENDGRID_TRACK_EMAIL_OPENS
+
+        self.track_email = track_email
 
     def send_messages(self, email_messages):
         success = 0
