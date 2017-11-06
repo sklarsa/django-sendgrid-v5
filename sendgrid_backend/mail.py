@@ -96,7 +96,7 @@ class SendgridBackend(BaseEmailBackend):
                 personalization.add_header(Header(k, v))
 
         if hasattr(msg, "template_id"):
-            mail.set_template_id(msg.template_id)
+            mail.template_id = msg.template_id
             if hasattr(msg, "substitutions"):
                 for k, v in msg.substitutions.items():
                     personalization.add_substitution(Substitution(k, v))

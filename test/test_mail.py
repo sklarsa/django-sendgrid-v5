@@ -23,7 +23,7 @@ class TestMailGeneration(SimpleTestCase):
     def setUpClass(self):
         super(TestMailGeneration, self).setUpClass()
         with override_settings(EMAIL_BACKEND="sendgrid_backend.SendgridBackend",
-                           SENDGRID_API_KEY="DUMMY_API_KEY"):
+                               SENDGRID_API_KEY="DUMMY_API_KEY"):
             self.backend = SendgridBackend()
 
     def test_EmailMessage(self):
@@ -189,6 +189,20 @@ class TestMailGeneration(SimpleTestCase):
             else:
                 self.assertEqual(result["attachments"][0]["content"], base64.b64encode(f.read()))
         self.assertEqual(result["attachments"][0]["type"], "image/png")
+
+    def test_templating(self):
+        msg = EmailMessage(
+            subject="Hello, World!",
+            body="Hello, World!",
+            from_email="Sam Smith <sam.smith@example.com>",
+            to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
+        )
+        msg.template_id = "test_template"
+        result = self.backend._build_sg_mail(msg)
+
+        self.assertIn("template_id", result)
+        self.assertEquals(result["template_id"], "test_template")
+
 
     """
     todo: Implement these
