@@ -4,6 +4,7 @@ import email.utils
 import mimetypes
 import sys
 import uuid
+import warnings
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -12,7 +13,8 @@ from django.core.mail.backends.base import BaseEmailBackend
 
 import sendgrid
 from sendgrid.helpers.mail import (
-    Attachment, Category, Content, Email, Header, Mail, MailSettings, OpenTracking, Personalization, SandBoxMode, Substitution, TrackingSettings
+    Attachment, Category, Content, Email, Header, Mail, MailSettings, OpenTracking,
+    Personalization, SandBoxMode, Substitution, TrackingSettings
 )
 
 from python_http_client.exceptions import HTTPError
@@ -45,7 +47,10 @@ class SendgridBackend(BaseEmailBackend):
             sandbox_mode_in_debug = settings.SENDGRID_SANDBOX_MODE_IN_DEBUG
 
         self.sandbox_mode = settings.DEBUG and sandbox_mode_in_debug
-        
+
+        if self.sandbox_mode:
+            warnings.warn("Sendgrid email backend is in sandbox mode!  Emails will not be delivered.")
+
         track_email = True
         if hasattr(settings, "SENDGRID_TRACK_EMAIL_OPENS"):
             track_email = settings.SENDGRID_TRACK_EMAIL_OPENS
