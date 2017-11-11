@@ -12,15 +12,9 @@ To use the backend, simply install the package (using pip), set the `EMAIL_BACKE
 1.  `pip install django-sendgrid-v5`
 2.  In your project's settings.py script:
     1.  Set `EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"`
-    2.  Set the SENDGRID\_API\_KEY in settings.py to your api key that
-        was provided to you be sendgrid. `SENDGRID_API_KEY =
-        os.environ["SENDGRID_API_KEY"]`
+    2.  Set the SENDGRID\_API\_KEY in settings.py to your api key that was provided to you be sendgrid. `SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]`
 
 ### Other settings
 
-1.  To toggle sandbox mode (when django is running in DEBUG mode), set
-    `SENDGRID_SANDBOX_MODE_IN_DEBUG = True/False`.
-    
-    a.  To err on the side of caution, this defaults to True, so
-         emails sent in DEBUG mode will not be delivered, unless this
-         setting is explicitly set to False.
+1.  To toggle sandbox mode (when django is running in DEBUG mode), set `SENDGRID_SANDBOX_MODE_IN_DEBUG = True/False`.
+    1.  To err on the side of caution, this defaults to True, so emails sent in DEBUG mode will not be delivered, unless this setting is explicitly set to False.
