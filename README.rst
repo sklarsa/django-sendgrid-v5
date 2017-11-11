@@ -33,6 +33,6 @@ How to Install
 
 Other settings
 --------------
-
 1. To toggle "sandbox mode" (when django is running in DEBUG mode), set :code:`SENDGRID_SANDBOX_MODE_IN_DEBUG =  True/False`.  
-    a. To err on the side of caution, this defaults to True, so emails sent in DEBUG mode will not be delievered, unless this setting is explicitly set to False.
+ 
+     a. To err on the side of caution, this defaults to True, so emails sent in DEBUG mode will not be delievered, unless this setting is explicitly set to False.
