@@ -150,6 +150,8 @@ class SendgridBackend(BaseEmailBackend):
 
             mail.add_attachment(attachment)
 
+        msg.body = ' ' if msg.body == '' else msg.body
+
         if isinstance(msg, EmailMultiAlternatives):
             mail.add_content(Content("text/plain", msg.body))
             for alt in msg.alternatives:
