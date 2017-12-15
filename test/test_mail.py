@@ -91,6 +91,9 @@ class TestMailGeneration(SimpleTestCase):
         )
 
         msg.attach_alternative("<body<div>Hello World!</div></body>", "text/html")
+        
+        # Test CSV attachment
+        msg.attach("file.csv", "1,2,3,4", "text/csv")
         result = self.backend._build_sg_mail(msg)
         expected = {
             "personalizations": [{
@@ -125,6 +128,11 @@ class TestMailGeneration(SimpleTestCase):
             },
             "subject": "Hello, World!",
             "tracking_settings": {"open_tracking": {"enable": True}},
+            "attachments": [{
+                "content": "MSwyLDMsNA==",
+                "filename": "file.csv",
+                "type": "text/csv"
+            }],
             "content": [{
                 "type": "text/plain",
                 "value": " ",
