@@ -79,6 +79,51 @@ class TestMailGeneration(SimpleTestCase):
 
         self.assertDictEqual(result, expected)
 
+    def test_EmailMessage_attributes(self):
+        """Test that send_at and categories attributes are correctly written through to output."""
+        msg = EmailMessage(
+            subject="Hello, World!",
+            body="Hello, World!",
+            from_email="Sam Smith <sam.smith@example.com>",
+            to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
+        )
+
+        # Set new attributes as message property
+        msg.send_at = 1518108670
+        msg.categories = ['mammal', 'dog']
+
+        result = self.backend._build_sg_mail(msg)
+        expected = {
+            "personalizations": [{
+                "to": [{
+                    "email": "john.doe@example.com",
+                    "name": "John Doe"
+                }, {
+                    "email": "jane.doe@example.com",
+                }],
+                "subject": "Hello, World!",
+                "send_at": 1518108670,
+            }],
+            "from": {
+                "email": "sam.smith@example.com",
+                "name": "Sam Smith"
+            },
+            "mail_settings": {
+                "sandbox_mode": {
+                    "enable": False
+                }
+            },
+            "subject": "Hello, World!",
+            "tracking_settings": {"open_tracking": {"enable": True}},
+            "content": [{
+                "type": "text/plain",
+                "value": "Hello, World!"
+            }],
+            "categories": ['mammal', 'dog'],
+        }
+
+        self.assertDictEqual(result, expected)
+
     def test_EmailMultiAlternatives(self):
         msg = EmailMultiAlternatives(
             subject="Hello, World!",
