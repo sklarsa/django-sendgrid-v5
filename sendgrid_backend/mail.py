@@ -106,6 +106,15 @@ class SendgridBackend(BaseEmailBackend):
                 for k, v in msg.substitutions.items():
                     personalization.add_substitution(Substitution(k, v))
 
+        # write through the send_at attribute
+        if hasattr(msg, "send_at"):
+            if not isinstance(msg.send_at, int):
+                raise ValueError(
+                    "send_at must be an integer, got: {}; "
+                    "see https://sendgrid.com/docs/API_Reference/SMTP_API/scheduling_parameters.html#-Send-At".format(
+                        type(msg.send_at)))
+            personalization.send_at = msg.send_at
+
         mail.add_personalization(personalization)
 
         if hasattr(msg, "reply_to") and msg.reply_to:
