@@ -13,7 +13,7 @@ from django.core.mail.backends.base import BaseEmailBackend
 
 import sendgrid
 from sendgrid.helpers.mail import (
-    Attachment, Category, Content, Email, Header, Mail, MailSettings, OpenTracking,
+    ASM, Attachment, Category, Content, Email, Header, Mail, MailSettings, OpenTracking,
     Personalization, SandBoxMode, Substitution, TrackingSettings
 )
 
@@ -177,6 +177,15 @@ class SendgridBackend(BaseEmailBackend):
         if hasattr(msg, "categories"):
             for cat in msg.categories:
                 mail.add_category(Category(cat))
+
+        if hasattr(msg, "asm"):
+            if "group_id" not in msg.asm:
+                raise KeyError("group_id not found in asm")
+
+            if "groups_to_display" in msg.asm:
+                mail.asm = ASM(msg.asm["group_id"], msg.asm["groups_to_display"])
+            else:
+                mail.asm = ASM(msg.asm["group_id"])
 
         mail_settings = MailSettings()
         mail_settings.sandbox_mode = SandBoxMode(self.sandbox_mode)

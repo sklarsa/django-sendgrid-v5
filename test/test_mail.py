@@ -136,7 +136,7 @@ class TestMailGeneration(SimpleTestCase):
         )
 
         msg.attach_alternative("<body<div>Hello World!</div></body>", "text/html")
-        
+
         # Test CSV attachment
         msg.attach("file.csv", "1,2,3,4", "text/csv")
         result = self.backend._build_sg_mail(msg)
@@ -256,6 +256,29 @@ class TestMailGeneration(SimpleTestCase):
         self.assertIn("template_id", result)
         self.assertEquals(result["template_id"], "test_template")
 
+    def test_asm(self):
+        msg = EmailMessage(
+            subject="Hello, World!",
+            body="Hello, World!",
+            from_email="Sam Smith <sam.smith@example.com>",
+            to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
+        )
+        msg.asm = {"group_id": 1}
+        result = self.backend._build_sg_mail(msg)
+
+        self.assertIn("asm", result)
+        self.assertIn("group_id", result["asm"])
+
+        del msg.asm["group_id"]
+        with self.assertRaises(KeyError):
+            self.backend._build_sg_mail(msg)
+
+        msg.asm = {"group_id": 1, "groups_to_display": [2, 3, 4], "bad_key": None}
+        result = self.backend._build_sg_mail(msg)
+
+        self.assertIn("asm", result)
+        self.assertIn("group_id", result["asm"])
+        self.assertIn("groups_to_display", result["asm"])
 
     """
     todo: Implement these
