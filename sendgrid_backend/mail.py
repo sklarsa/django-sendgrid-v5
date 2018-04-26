@@ -146,6 +146,9 @@ class SendgridBackend(BaseEmailBackend):
                 attachment.type = attch.get_content_type()
                 content_id = attch.get("Content-ID")
                 if content_id:
+                    # Strip brackets since sendgrid's api adds them
+                    if content_id.startswith("<") and content_id.endswith(">"):
+                        content_id = content_id[1:-1]
                     attachment.content_id = content_id
                     attachment.disposition = "inline"
 

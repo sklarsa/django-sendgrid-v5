@@ -228,7 +228,7 @@ class TestMailGeneration(SimpleTestCase):
         msg.attach_alternative(content, "text/html")
         with open("test/linux-penguin.png", "rb") as f:
             img = MIMEImage(f.read())
-            img.add_header("Content-ID", "linux_penguin")
+            img.add_header("Content-ID", "<linux_penguin>")
             msg.attach(img)
 
         result = self.backend._build_sg_mail(msg)
@@ -236,6 +236,8 @@ class TestMailGeneration(SimpleTestCase):
         self.assertDictEqual(result["content"][0], {"type": "text/plain", "value": " "})
         self.assertDictEqual(result["content"][1], {"type": "text/html", "value": content})
         self.assertEqual(len(result["attachments"]), 1)
+        self.assertEqual(result["attachments"][0]["content_id"], "linux_penguin")
+
         with open("test/linux-penguin.png", "rb") as f:
             if sys.version_info >= (3.0, 0.0, ):
                 self.assertEqual(bytearray(result["attachments"][0]["content"], "utf-8"), base64.b64encode(f.read()))
