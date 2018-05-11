@@ -63,7 +63,9 @@ class SendgridBackend(BaseEmailBackend):
             data = self._build_sg_mail(msg)
 
             try:
-                self.sg.client.mail.send.post(request_body=data)
+                resp = self.sg.client.mail.send.post(request_body=data)
+                msg.extra_headers['status'] = resp.status_code
+                msg.extra_headers['message_id'] = resp.headers.getheader('x-message-id')
                 success += 1
             except HTTPError:
                 if not self.fail_silently:
