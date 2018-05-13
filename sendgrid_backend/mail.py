@@ -117,7 +117,7 @@ class SendgridBackend(BaseEmailBackend):
                         type(msg.ip_pool_name)))
             if not 2 <= len(msg.ip_pool_name) <= 64:
                 raise ValueError(
-                    "the number of characters of ip_pool_name must min 2 and max 64, got: {}; "
+                    "the number of characters of ip_pool_name must be min 2 and max 64, got: {}; "
                     "see https://sendgrid.com/docs/API_Reference/Web_API_v3/Mail/index.html#-Request-Body-Parameters".format(
                         len(msg.ip_pool_name)))
             mail.ip_pool_name = msg.ip_pool_name

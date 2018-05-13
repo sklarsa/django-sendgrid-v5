@@ -91,6 +91,7 @@ class TestMailGeneration(SimpleTestCase):
         # Set new attributes as message property
         msg.send_at = 1518108670
         msg.categories = ['mammal', 'dog']
+        msg.ip_pool_name = 'some-name'
 
         result = self.backend._build_sg_mail(msg)
         expected = {
@@ -120,6 +121,7 @@ class TestMailGeneration(SimpleTestCase):
                 "value": "Hello, World!"
             }],
             "categories": ['mammal', 'dog'],
+            "ip_pool_name": "some-name"
         }
 
         self.assertDictEqual(result, expected)
