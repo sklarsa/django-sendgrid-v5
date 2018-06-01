@@ -191,6 +191,73 @@ class TestMailGeneration(SimpleTestCase):
 
         self.assertDictEqual(result, expected)
 
+
+
+    def test_EmailMultiAlternatives__unicode_attachment(self):
+        msg = EmailMultiAlternatives(
+            subject="Hello, World!",
+            body=" ",
+            from_email="Sam Smith <sam.smith@example.com>",
+            to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
+            cc=["Stephanie Smith <stephanie.smith@example.com>"],
+            bcc=["Sarah Smith <sarah.smith@example.com>"],
+            reply_to=["Sam Smith <sam.smith@example.com>"],
+        )
+
+        msg.attach_alternative("<body<div>Hello World!</div></body>", "text/html")
+
+        # Test CSV attachment
+        msg.attach("file.xls", b'\xd0', "application/vnd.ms-excel")
+        result = self.backend._build_sg_mail(msg)
+        expected = {
+            "personalizations": [{
+                "to": [{
+                    "email": "john.doe@example.com",
+                    "name": "John Doe"
+                }, {
+                    "email": "jane.doe@example.com",
+                }],
+                "cc": [{
+                    "email": "stephanie.smith@example.com",
+                    "name": "Stephanie Smith"
+                }],
+                "bcc": [{
+                    "email": "sarah.smith@example.com",
+                    "name": "Sarah Smith"
+                }],
+                "subject": "Hello, World!"
+            }],
+            "from": {
+                "email": "sam.smith@example.com",
+                "name": "Sam Smith"
+            },
+            "mail_settings": {
+                "sandbox_mode": {
+                    "enable": False
+                }
+            },
+            "reply_to": {
+                "email": "sam.smith@example.com",
+                "name": "Sam Smith"
+            },
+            "subject": "Hello, World!",
+            "tracking_settings": {"open_tracking": {"enable": True}},
+            "attachments": [{
+                "content": "0A==",
+                "filename": "file.xls",
+                "type": "application/vnd.ms-excel"
+            }],
+            "content": [{
+                "type": "text/plain",
+                "value": " ",
+            }, {
+                "type": "text/html",
+                "value": "<body<div>Hello World!</div></body>",
+            }]
+        }
+
+        self.assertDictEqual(result, expected)
+
     def test_reply_to(self):
         kwargs = {
             "subject": "Hello, World!",
