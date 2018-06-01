@@ -28,5 +28,5 @@ setup(
     ],
     keywords="django email sendgrid backend",
     packages=find_packages(exclude=["test", ]),
-    install_requires=["django >=1.8", "sendgrid >=5.0.0", "python-http-client >=3.0.0"]
+    install_requires=["django >=1.8", "sendgrid >=5.0.0", "python-http-client >=3.0.0", "future"]
 )

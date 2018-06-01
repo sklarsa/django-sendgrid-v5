@@ -1,3 +1,4 @@
+from future.builtins import str
 import base64
 from email.mime.base import MIMEBase
 import email.utils
