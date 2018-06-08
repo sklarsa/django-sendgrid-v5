@@ -66,7 +66,7 @@ class SendgridBackend(BaseEmailBackend):
             try:
                 resp = self.sg.client.mail.send.post(request_body=data)
                 msg.extra_headers['status'] = resp.status_code
-                x_message_id = resp.headers.getheader('x-message-id', None)
+                x_message_id = resp.headers.get('x-message-id', None)
                 if x_message_id:
                     msg.extra_headers['message_id'] = x_message_id
                 success += 1
