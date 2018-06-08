@@ -16,4 +16,6 @@ install:
   - "pip install -r dev-requirements.txt"
   - "pip install sendgrid"
   - "pip install django==$DJANGO_VERSION"
-script: nosetests -c nose.cfg
+script:
+  - nosetests -c nose.cfg
+  - flake8 sendgrid_backend/
