@@ -1,7 +1,6 @@
 import base64
 import sys
 
-from django.conf import settings
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
@@ -190,8 +189,6 @@ class TestMailGeneration(SimpleTestCase):
         }
 
         self.assertDictEqual(result, expected)
-
-
 
     def test_EmailMultiAlternatives__unicode_attachment(self):
         msg = EmailMultiAlternatives(

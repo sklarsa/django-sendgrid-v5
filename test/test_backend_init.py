@@ -12,4 +12,4 @@ class TestBackendInit(SimpleTestCase):
         backend = SendgridBackend(api_key="DUMMY_API_KEY")
 
         with self.assertRaises(ImproperlyConfigured):
-            backend = SendgridBackend()
+            backend = SendgridBackend() # noqa

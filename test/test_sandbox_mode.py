@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.core.mail import EmailMessage
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
