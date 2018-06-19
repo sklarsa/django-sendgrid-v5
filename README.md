@@ -12,7 +12,7 @@ To use the backend, simply install the package (using pip), set the `EMAIL_BACKE
 1.  `pip install django-sendgrid-v5`
 2.  In your project's settings.py script:
     1.  Set `EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"`
-    2.  Set the SENDGRID\_API\_KEY in settings.py to your api key that was provided to you be sendgrid. `SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]`
+    2.  Set the SENDGRID\_API\_KEY in settings.py to your api key that was provided to you by sendgrid. `SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]`
 
 ### Other settings
 
