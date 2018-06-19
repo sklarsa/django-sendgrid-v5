@@ -17,5 +17,6 @@ install:
   - "pip install sendgrid"
   - "pip install django==$DJANGO_VERSION"
 script:
-  - nosetests -c nose.cfg
+  - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then nosetests -c nose.cfg -I test_post_to_sendgrid; fi'
+  - 'if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then nosetests -c nose.cfg; fi'
   - flake8 sendgrid_backend/
