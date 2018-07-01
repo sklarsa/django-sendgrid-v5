@@ -177,9 +177,10 @@ class SendgridBackend(BaseEmailBackend):
                 filename, content, mimetype = attch
 
                 attachment.filename = filename
+                # Convert content from chars to bytes, in both Python 2 and 3.
                 # todo: Read content if stream?
                 if isinstance(content, str):
-                    content = content.encode()
+                    content = content.encode('utf-8')
                 attachment.content = base64.b64encode(content).decode()
                 attachment.type = mimetype
 

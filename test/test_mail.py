@@ -200,11 +200,12 @@ class TestMailGeneration(SimpleTestCase):
             bcc=["Sarah Smith <sarah.smith@example.com>"],
             reply_to=["Sam Smith <sam.smith@example.com>"],
         )
-
         msg.attach_alternative("<body<div>Hello World!</div></body>", "text/html")
 
         # Test CSV attachment
-        msg.attach("file.xls", b'\xd0', "application/vnd.ms-excel")
+        msg.attach("file.xls", b"\xd0", "application/vnd.ms-excel")
+        msg.attach("file.csv", b"C\xc3\xb4te d\xe2\x80\x99Ivoire", "text/csv")
+
         result = self.backend._build_sg_mail(msg)
         expected = {
             "personalizations": [{
@@ -239,11 +240,18 @@ class TestMailGeneration(SimpleTestCase):
             },
             "subject": "Hello, World!",
             "tracking_settings": {"open_tracking": {"enable": True}},
-            "attachments": [{
-                "content": "0A==",
-                "filename": "file.xls",
-                "type": "application/vnd.ms-excel"
-            }],
+            "attachments": [
+                {
+                    "content": "0A==",
+                    "filename": "file.xls",
+                    "type": "application/vnd.ms-excel"
+                },
+                {
+                    "content": "Q8O0dGUgZOKAmUl2b2lyZQ==",
+                    "filename": "file.csv",
+                    "type": "text/csv"
+                }
+            ],
             "content": [{
                 "type": "text/plain",
                 "value": " ",
