@@ -110,6 +110,8 @@ class SendgridBackend(BaseEmailBackend):
             if hasattr(msg, "substitutions"):
                 for k, v in msg.substitutions.items():
                     personalization.add_substitution(Substitution(k, v))
+            if hasattr(msg, "dynamic_template_data"):
+                personalization.dynamic_template_data = msg.dynamic_template_data
 
         # write through the ip_pool_name attribute
         if hasattr(msg, "ip_pool_name"):
