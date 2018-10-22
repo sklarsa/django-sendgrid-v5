@@ -47,7 +47,7 @@ class SendgridBackend(BaseEmailBackend):
         if hasattr(settings, "SENDGRID_SANDBOX_MODE_IN_DEBUG"):
             sandbox_mode_in_debug = settings.SENDGRID_SANDBOX_MODE_IN_DEBUG
 
-        self.sandbox_mode = settings.DEBUG and sandbox_mode_in_debug
+        self.sandbox_mode = bool(settings.DEBUG) and bool(sandbox_mode_in_debug)
 
         if self.sandbox_mode:
             warnings.warn("Sendgrid email backend is in sandbox mode!  Emails will not be delivered.")
