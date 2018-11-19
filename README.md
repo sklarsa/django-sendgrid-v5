@@ -18,3 +18,5 @@ To use the backend, simply install the package (using pip), set the `EMAIL_BACKE
 
 1.  To toggle sandbox mode (when django is running in DEBUG mode), set `SENDGRID_SANDBOX_MODE_IN_DEBUG = True/False`.
     1.  To err on the side of caution, this defaults to True, so emails sent in DEBUG mode will not be delivered, unless this setting is explicitly set to False.
+2.  `SENDGRID_ECHO_TO_STDOUT` will echo to stdout or any other file-like
+    object that is passed to the backend via the `stream` kwarg.
