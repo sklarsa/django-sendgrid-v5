@@ -1,5 +1,8 @@
 import os
-from unittest.mock import MagicMock
+if sys.version_info >= (3.0, 0.0):
+    from unittest.mock import MagicMock
+else:
+    from mock import MagicMock
 
 from django.core.mail import EmailMessage
 from django.test import override_settings
