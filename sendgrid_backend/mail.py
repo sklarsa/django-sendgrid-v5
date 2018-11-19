@@ -65,7 +65,6 @@ class SendgridBackend(BaseEmailBackend):
             self._lock = None
             self.stream = None
 
-
     def write_to_stream(self, message):
         msg = message.message()
         msg_data = msg.as_bytes()
