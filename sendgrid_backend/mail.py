@@ -58,7 +58,7 @@ class SendgridBackend(BaseEmailBackend):
 
         self.track_email = track_email
 
-        if hasattr(settings, "SENDGRID_ECHO_TO_STDOUT"):
+        if hasattr(settings, "SENDGRID_ECHO_TO_STDOUT") and settings.SENDGRID_ECHO_TO_STDOUT:
             self._lock = threading.RLock()
             self.stream = kwargs.pop('stream', sys.stdout)
         else:
