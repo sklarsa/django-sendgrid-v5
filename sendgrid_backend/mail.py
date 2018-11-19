@@ -35,8 +35,6 @@ class SendgridBackend(BaseEmailBackend):
     """
     def __init__(self, *args, **kwargs):
         super(SendgridBackend, self).__init__(*args, **kwargs)
-        self._lock = threading.RLock()
-        self.stream = kwargs.pop('stream', sys.stdout)
         if "api_key" in kwargs:
             self.sg = sendgrid.SendGridAPIClient(api_key=kwargs["api_key"])
         elif hasattr(settings, "SENDGRID_API_KEY") and settings.SENDGRID_API_KEY:
@@ -60,7 +58,15 @@ class SendgridBackend(BaseEmailBackend):
 
         self.track_email = track_email
 
-    def write_message_to_console(self, message):
+        if hasattr(settings, "SENDGRID_ECHO_TO_STDOUT"):
+            self._lock = threading.RLock()
+            self.stream = kwargs.pop('stream', sys.stdout)
+        else:
+            self._lock = None
+            self.stream = None
+
+
+    def write_to_stream(self, message):
         msg = message.message()
         msg_data = msg.as_bytes()
         charset = msg.get_charset().get_output_charset() if msg.get_charset() else 'utf-8'
@@ -69,28 +75,25 @@ class SendgridBackend(BaseEmailBackend):
         self.stream.write('-' * 79)
         self.stream.write('\n')
 
-    def send_to_console(self, email_messages):
-        """Write all messages to the stream in a thread-safe way."""
+    def echo_to_output_stream(self, email_messages):
+        """ Write all messages to the stream in a thread-safe way. """
         if not email_messages:
             return
-        msg_count = 0
         with self._lock:
             try:
                 stream_created = self.open()
                 for message in email_messages:
-                    self.write_message_to_console(message)
+                    self.write_to_stream(message)
                     self.stream.flush()  # flush after each message
-                    msg_count += 1
                 if stream_created:
                     self.close()
             except Exception:
                 if not self.fail_silently:
                     raise
-        return msg_count
 
     def send_messages(self, email_messages):
-        if self.sandbox_mode:
-            self.send_to_console(email_messages)
+        if self.stream:
+            self.echo_to_output_stream(email_messages)
         success = 0
         for msg in email_messages:
             data = self._build_sg_mail(msg)
