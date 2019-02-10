@@ -16,7 +16,7 @@ from django.core.mail.backends.base import BaseEmailBackend
 import sendgrid
 from sendgrid.helpers.mail import (
     ASM, Attachment, Category, Content, Email, Header, Mail, MailSettings, OpenTracking,
-    Personalization, SandBoxMode, Substitution, TrackingSettings
+    Personalization, SandBoxMode, Substitution, TrackingSettings, CustomArg
 )
 
 from python_http_client.exceptions import HTTPError
@@ -130,6 +130,10 @@ class SendgridBackend(BaseEmailBackend):
 
         for addr in msg.bcc:
             personalization.add_bcc(Email(*self._parse_email_address(addr)))
+
+        if hasattr(msg, 'custom_args'):
+            for k, v in msg.custom_args.items():
+                personalization.add_custom_arg(CustomArg(k, v))
 
         personalization.subject = msg.subject
 
