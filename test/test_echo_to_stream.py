@@ -16,9 +16,10 @@ class TestEchoToOutput(SimpleTestCase):
     def test_echo(self):
         settings = {
             "DEBUG": True,
-            "SENDGRID_API_KEY": "DUMMY_KEY",
+            "SENDGRID_API_KEY": "DOESNT_MATTER",
             "EMAIL_BACKEND": "sendgrid_backend.SendgridBackend",
-            "SENDGRID_ECHO_TO_STDOUT": True
+            "SENDGRID_ECHO_TO_STDOUT": True,
+            "SENDGRID_SANDBOX_MODE_IN_DEBUG": True,
         }
         with override_settings(**settings):
             mocked_output_stream = MagicMock()
