@@ -356,6 +356,62 @@ class TestMailGeneration(SimpleTestCase):
         self.assertIn("group_id", result["asm"])
         self.assertIn("groups_to_display", result["asm"])
 
+    def test_EmailMessage_custom_args(self):
+        msg = EmailMessage(
+            subject="Hello, World!",
+            body="Hello, World!",
+            from_email="Sam Smith <sam.smith@example.com>",
+            to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
+            cc=["Stephanie Smith <stephanie.smith@example.com>"],
+            bcc=["Sarah Smith <sarah.smith@example.com>"],
+            reply_to=["Sam Smith <sam.smith@example.com>"],
+        )
+        msg.custom_args = {"arg_1": "Foo", "arg_2": "bar"}
+
+        result = self.backend._build_sg_mail(msg)
+        expected = {
+            "personalizations": [{
+                "to": [{
+                    "email": "john.doe@example.com",
+                    "name": "John Doe"
+                }, {
+                    "email": "jane.doe@example.com",
+                }],
+                "cc": [{
+                    "email": "stephanie.smith@example.com",
+                    "name": "Stephanie Smith"
+                }],
+                "bcc": [{
+                    "email": "sarah.smith@example.com",
+                    "name": "Sarah Smith"
+                }],
+                "subject": "Hello, World!",
+                "custom_args": {"arg_1": "Foo", "arg_2": "bar"}
+            }],
+            "from": {
+                "email": "sam.smith@example.com",
+                "name": "Sam Smith"
+            },
+            "mail_settings": {
+                "sandbox_mode": {
+                    "enable": False
+                }
+            },
+            "reply_to": {
+                "email": "sam.smith@example.com",
+                "name": "Sam Smith"
+            },
+            "subject": "Hello, World!",
+            "tracking_settings": {"open_tracking": {"enable": True}},
+            "content": [{
+                "type": "text/plain",
+                "value": "Hello, World!"
+            }],
+        }
+
+        self.assertDictEqual(result, expected)
+
+
     """
     todo: Implement these
     def test_attachments(self):
