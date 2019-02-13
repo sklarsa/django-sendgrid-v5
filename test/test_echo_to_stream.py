@@ -16,7 +16,7 @@ class TestEchoToOutput(SimpleTestCase):
     def test_echo(self):
         settings = {
             "DEBUG": True,
-            "SENDGRID_API_KEY": os.environ["SENDGRID_API_KEY"],
+            "SENDGRID_API_KEY": "DUMMY_KEY",
             "EMAIL_BACKEND": "sendgrid_backend.SendgridBackend",
             "SENDGRID_ECHO_TO_STDOUT": True
         }
