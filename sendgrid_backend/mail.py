@@ -17,7 +17,7 @@ import sendgrid
 from sendgrid.helpers.mail import (
     ASM, Attachment, Category, Content, Email, Header, Mail, MailSettings, OpenTracking,
     ClickTracking, SubscriptionTracking,
-    Personalization, SandBoxMode, Substitution, TrackingSettings
+    Personalization, SandBoxMode, Substitution, TrackingSettings, CustomArg
 )
 
 from python_http_client.exceptions import HTTPError
