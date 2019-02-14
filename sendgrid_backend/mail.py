@@ -141,6 +141,10 @@ class SendgridBackend(BaseEmailBackend):
         for addr in msg.bcc:
             personalization.add_bcc(Email(*self._parse_email_address(addr)))
 
+        if hasattr(msg, 'custom_args'):
+            for k, v in msg.custom_args.items():
+                personalization.add_custom_arg(CustomArg(k, v))
+
         personalization.subject = msg.subject
 
         for k, v in msg.extra_headers.items():
