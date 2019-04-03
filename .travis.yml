@@ -1,5 +1,7 @@
 sudo: false
 language: python
+# https://github.com/travis-ci/travis-ci/issues/9815
+dist: xenial
 env:
     - DJANGO_VERSION=2.1
     - DJANGO_VERSION=1.11
@@ -8,6 +10,7 @@ env:
 python:
   - 2.7
   - 3.6
+  - 3.7
 install: pip install -r dev-requirements.txt
 script:
   - tox
