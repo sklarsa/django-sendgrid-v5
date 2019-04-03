@@ -1,19 +1,15 @@
+sudo: false
 language: python
 env:
-    - DJANGO_VERSION=1.11.3
-    - DJANGO_VERSION=1.10.7
-    - DJANGO_VERSION=1.8.18
+    - DJANGO_VERSION=2.1
+    - DJANGO_VERSION=1.11
+    - DJANGO_VERSION=1.10
+    - DJANGO_VERSION=1.8
 python:
   - "2.7"
   - "3.6"
-  - "3.6-dev" # 3.6 development branch
-  - "3.7-dev" # 3.7 development branch
-  - "nightly" # currently points to 3.7-dev
-install:
-  - "pip install -r dev-requirements.txt"
-  - "pip install sendgrid"
-  - "pip install django==$DJANGO_VERSION"
+  - "3.7"
+install: pip install tox-travis
 script:
-  - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then nosetests -c nose.cfg -I test_post_to_sendgrid; fi'
-  - 'if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then nosetests -c nose.cfg; fi'
+  - tox
   - flake8 sendgrid_backend/
