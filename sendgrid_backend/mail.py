@@ -14,6 +14,13 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.mail.backends.base import BaseEmailBackend
 
 import sendgrid
+from sendgrid.helpers.mail import (
+    Attachment, Category, Content, Email, Header, Mail, MailSettings, OpenTracking,
+    Personalization, SandBoxMode, Substitution, TrackingSettings, CustomArg
+)
+
+from python_http_client.exceptions import HTTPError
+
 SENDGRID_VERSION = sendgrid.__version__
 
 # Need to change imports because of breaking changes in sendgrid's v6 api
@@ -23,13 +30,6 @@ if SENDGRID_VERSION < '6':
 else:
     from sendgrid.helpers.mail import Asm as ASM
     from sendgrid.helpers.mail import IpPoolName
-
-from sendgrid.helpers.mail import (
-    Attachment, Category, Content, Email, Header, Mail, MailSettings, OpenTracking,
-    Personalization, SandBoxMode, Substitution, TrackingSettings, CustomArg
-)
-
-from python_http_client.exceptions import HTTPError
 
 if sys.version_info >= (3.0, 0.0):
     basestring = str
