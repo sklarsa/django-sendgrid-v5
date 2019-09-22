@@ -9,3 +9,4 @@ build/
 .noseids
 .vscode/
 .tox
+.idea
