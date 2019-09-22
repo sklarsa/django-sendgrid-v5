@@ -304,10 +304,7 @@ class SendgridBackend(BaseEmailBackend):
         tracking_settings = TrackingSettings()
         tracking_settings.open_tracking = OpenTracking(self.track_email)
 
-        ct = ClickTracking(False, False)
-        ct.set_enable(self.track_clicks_html)
-        ct.set_enable_text(self.track_clicks_plain)
-        tracking_settings.set_click_tracking(ct)
+        tracking_settings.click_tracking = ClickTracking(self.track_clicks_html, self.track_clicks_plain)
 
         mail.tracking_settings = tracking_settings
 
