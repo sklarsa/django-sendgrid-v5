@@ -5,7 +5,7 @@ from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
 
-from sendgrid_backend.mail import SendgridBackend
+from sendgrid_backend.mail import SendgridBackend, SENDGRID_VERSION
 
 if sys.version_info >= (3.0, 0.0, ):
     from email.mime.image import MIMEImage
@@ -92,7 +92,11 @@ class TestMailGeneration(SimpleTestCase):
 
         # Set new attributes as message property
         msg.send_at = 1518108670
-        msg.categories = ['mammal', 'dog']
+        if SENDGRID_VERSION < '6':
+            msg.categories = ['mammal', 'dog']
+        else:
+            msg.categories = ['dog', 'mammal']
+
         msg.ip_pool_name = 'some-name'
 
         result = self.backend._build_sg_mail(msg)
@@ -212,8 +216,18 @@ class TestMailGeneration(SimpleTestCase):
         msg.attach_alternative("<body<div>Hello World!</div></body>", "text/html")
 
         # Test CSV attachment
-        msg.attach("file.xls", b"\xd0", "application/vnd.ms-excel")
-        msg.attach("file.csv", b"C\xc3\xb4te d\xe2\x80\x99Ivoire", "text/csv")
+        attachments = [
+            ("file.xls", b"\xd0", "application/vnd.ms-excel"),
+            ("file.csv", b"C\xc3\xb4te d\xe2\x80\x99Ivoire", "text/csv"),
+        ]
+
+        if SENDGRID_VERSION < '6':
+            for a in attachments:
+                msg.attach(*a)
+        else:
+            for a in reversed(attachments):
+                msg.attach(*a)
+
 
         result = self.backend._build_sg_mail(msg)
         expected = {

@@ -15,12 +15,21 @@ from django.core.mail.backends.base import BaseEmailBackend
 
 import sendgrid
 from sendgrid.helpers.mail import (
-    ASM, Attachment, Category, Content, Email, Header, Mail, MailSettings, OpenTracking,
-    ClickTracking, SubscriptionTracking,
-    Personalization, SandBoxMode, Substitution, TrackingSettings, CustomArg
+    Attachment, Category, Content, Email, Header, Mail, MailSettings, OpenTracking,
+    ClickTracking, SubscriptionTracking, Personalization, SandBoxMode, Substitution, TrackingSettings, CustomArg
 )
 
 from python_http_client.exceptions import HTTPError
+
+SENDGRID_VERSION = sendgrid.__version__
+
+# Need to change imports because of breaking changes in sendgrid's v6 api
+# https://github.com/sendgrid/sendgrid-python/releases/tag/v6.0.0
+if SENDGRID_VERSION < '6':
+    from sendgrid.helpers.mail import ASM
+else:
+    from sendgrid.helpers.mail import Asm as ASM
+    from sendgrid.helpers.mail import IpPoolName
 
 if sys.version_info >= (3.0, 0.0):
     basestring = str
@@ -119,6 +128,54 @@ class SendgridBackend(BaseEmailBackend):
                     raise
         return success
 
+    def _create_sg_attachment(self, django_attch):
+        """
+        Handles the conversion between a django attachment object and a sendgrid attachment object.
+        Due to differences between sendgrid's API versions, use this method when constructing attachments to ensure
+        that attachments get properly instantiated.
+        """
+
+        def set_prop(attachment, prop_name, value):
+            if SENDGRID_VERSION < '6':
+                setattr(attachment, prop_name, value)
+            else:
+                if prop_name == "filename":
+                    prop_name = "name"
+                setattr(attachment, 'file_{}'.format(prop_name), value)
+
+        sg_attch = Attachment()
+
+        if isinstance(django_attch, MIMEBase):
+            filename = django_attch.get_filename()
+            if not filename:
+                ext = mimetypes.guess_extension(django_attch.get_content_type())
+                filename = "part-{0}{1}".format(uuid.uuid4().hex, ext)
+            set_prop(sg_attch, "filename", filename)
+            # todo: Read content if stream?
+            set_prop(sg_attch, "content", django_attch.get_payload().replace("\n", ""))
+            set_prop(sg_attch, "type", django_attch.get_content_type())
+            content_id = django_attch.get("Content-ID")
+            if content_id:
+                # Strip brackets since sendgrid's api adds them
+                if content_id.startswith("<") and content_id.endswith(">"):
+                    content_id = content_id[1:-1]
+                # These 2 properties did not change in v6, so we set them the usual way
+                sg_attch.content_id = content_id
+                sg_attch.disposition = "inline"
+
+        else:
+            filename, content, mimetype = django_attch
+
+            set_prop(sg_attch, "filename", filename)
+            # Convert content from chars to bytes, in both Python 2 and 3.
+            # todo: Read content if stream?
+            if isinstance(content, str):
+                content = content.encode('utf-8')
+            set_prop(sg_attch, "content", base64.b64encode(content).decode())
+            set_prop(sg_attch, "type", mimetype)
+
+        return sg_attch
+
     def _parse_email_address(self, address):
         name, addr = email.utils.parseaddr(address)
         if not name:
@@ -161,21 +218,25 @@ class SendgridBackend(BaseEmailBackend):
             if hasattr(msg, "dynamic_template_data"):
                 personalization.dynamic_template_data = msg.dynamic_template_data
 
-        # write through the ip_pool_name attribute
         if hasattr(msg, "ip_pool_name"):
             if not isinstance(msg.ip_pool_name, basestring):
                 raise ValueError(
-                    "ip_pool_name must be a string, got: {}; "
-                    "see https://sendgrid.com/docs/API_Reference/Web_API_v3/Mail/"
-                    "index.html#-Request-Body-Parameters".format(
+                    "ip_pool_name must be a {}, got: {}; ".format(
                         type(msg.ip_pool_name)))
+
+            # Validate ip_pool_name length before attempting to add
             if not 2 <= len(msg.ip_pool_name) <= 64:
                 raise ValueError(
                     "the number of characters of ip_pool_name must be min 2 and max 64, got: {}; "
                     "see https://sendgrid.com/docs/API_Reference/Web_API_v3/Mail/"
                     "index.html#-Request-Body-Parameters".format(
                         len(msg.ip_pool_name)))
-            mail.ip_pool_name = msg.ip_pool_name
+
+            if SENDGRID_VERSION < "6":
+                ip_pool_name = msg.ip_pool_name
+            else:
+                ip_pool_name = IpPoolName(msg.ip_pool_name)
+            mail.ip_pool_name = ip_pool_name
 
         # write through the send_at attribute
         if hasattr(msg, "send_at"):
@@ -204,37 +265,8 @@ class SendgridBackend(BaseEmailBackend):
                 mail.reply_to = Email(*self._parse_email_address(msg.reply_to))
 
         for attch in msg.attachments:
-            attachment = Attachment()
-
-            if isinstance(attch, MIMEBase):
-                filename = attch.get_filename()
-                if not filename:
-                    ext = mimetypes.guess_extension(attch.get_content_type())
-                    filename = "part-{0}{1}".format(uuid.uuid4().hex, ext)
-                attachment.filename = filename
-                # todo: Read content if stream?
-                attachment.content = attch.get_payload().replace("\n", "")
-                attachment.type = attch.get_content_type()
-                content_id = attch.get("Content-ID")
-                if content_id:
-                    # Strip brackets since sendgrid's api adds them
-                    if content_id.startswith("<") and content_id.endswith(">"):
-                        content_id = content_id[1:-1]
-                    attachment.content_id = content_id
-                    attachment.disposition = "inline"
-
-            else:
-                filename, content, mimetype = attch
-
-                attachment.filename = filename
-                # Convert content from chars to bytes, in both Python 2 and 3.
-                # todo: Read content if stream?
-                if isinstance(content, str):
-                    content = content.encode('utf-8')
-                attachment.content = base64.b64encode(content).decode()
-                attachment.type = mimetype
-
-            mail.add_attachment(attachment)
+            sg_attch = self._create_sg_attachment(attch)
+            mail.add_attachment(sg_attch)
 
         msg.body = ' ' if msg.body == '' else msg.body
 
