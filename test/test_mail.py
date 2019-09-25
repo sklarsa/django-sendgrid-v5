@@ -428,7 +428,11 @@ class TestMailGeneration(SimpleTestCase):
                 "name": "Sam Smith"
             },
             "subject": "Hello, World!",
-            "tracking_settings": {"open_tracking": {"enable": True}},
+            "tracking_settings": {
+                "click_tracking": {"enable": True},
+                'open_tracking': {'enable': True},
+                'subscription_tracking': {'enable': False}
+            },
             "content": [{
                 "type": "text/plain",
                 "value": "Hello, World!"
