@@ -69,7 +69,10 @@ class TestMailGeneration(SimpleTestCase):
                 "name": "Sam Smith"
             },
             "subject": "Hello, World!",
-            "tracking_settings": {"open_tracking": {"enable": True}},
+            "tracking_settings": {
+                "click_tracking": {"enable": True},
+                'open_tracking': {'enable': True},
+                'subscription_tracking': {'enable': False}},
             "content": [{
                 "type": "text/plain",
                 "value": "Hello, World!"
@@ -118,7 +121,10 @@ class TestMailGeneration(SimpleTestCase):
                 }
             },
             "subject": "Hello, World!",
-            "tracking_settings": {"open_tracking": {"enable": True}},
+            "tracking_settings": {
+                "click_tracking": {"enable": True},
+                'open_tracking': {'enable': True},
+                'subscription_tracking': {'enable': False}},
             "content": [{
                 "type": "text/plain",
                 "value": "Hello, World!"
@@ -177,7 +183,10 @@ class TestMailGeneration(SimpleTestCase):
                 "name": "Sam Smith"
             },
             "subject": "Hello, World!",
-            "tracking_settings": {"open_tracking": {"enable": True}},
+            "tracking_settings": {
+                "click_tracking": {"enable": True},
+                'open_tracking': {'enable': True},
+                'subscription_tracking': {'enable': False}},
             "attachments": [{
                 "content": "MSwyLDMsNA==",
                 "filename": "file.csv",
@@ -253,7 +262,10 @@ class TestMailGeneration(SimpleTestCase):
                 "name": "Sam Smith"
             },
             "subject": "Hello, World!",
-            "tracking_settings": {"open_tracking": {"enable": True}},
+            "tracking_settings": {
+                "click_tracking": {"enable": True},
+                'open_tracking': {'enable': True},
+                'subscription_tracking': {'enable': False}},
             "attachments": [
                 {
                     "content": "0A==",
@@ -416,7 +428,11 @@ class TestMailGeneration(SimpleTestCase):
                 "name": "Sam Smith"
             },
             "subject": "Hello, World!",
-            "tracking_settings": {"open_tracking": {"enable": True}},
+            "tracking_settings": {
+                "click_tracking": {"enable": True},
+                'open_tracking': {'enable': True},
+                'subscription_tracking': {'enable': False}
+            },
             "content": [{
                 "type": "text/plain",
                 "value": "Hello, World!"
