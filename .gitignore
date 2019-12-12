@@ -9,5 +9,5 @@ build/
 .noseids
 .vscode/
 .tox
-
 \.eggs/
+.idea
