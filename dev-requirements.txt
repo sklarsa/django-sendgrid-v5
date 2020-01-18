@@ -1,4 +1,4 @@
-codecov-2.0.15
+codecov==2.0.15
 coverage==4.4.1
 flake8==3.5.0
 jedi==0.10.2
