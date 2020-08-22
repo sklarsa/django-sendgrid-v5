@@ -7,9 +7,13 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+__version__ = None
+with open('sendgrid_backend/version.py') as f:
+    exec(f.read())
+
 setup(
     name="django-sendgrid-v5",
-    version="0.8.1",
+    version=str(__version__),
     description="An implementation of Django's EmailBackend compatible with sendgrid-python v5+",
     long_description=long_description,
     url="https://github.com/sklarsa/django-sendgrid-v5",
