@@ -341,7 +341,7 @@ class TestMailGeneration(SimpleTestCase):
                 self.assertEqual(result["attachments"][0]["content"], base64.b64encode(f.read()))
         self.assertEqual(result["attachments"][0]["type"], "image/png")
 
-    def test_templating(self):
+    def test_templating_sendgrid_v5(self):
         msg = EmailMessage(
             subject="Hello, World!",
             body="Hello, World!",
@@ -353,6 +353,43 @@ class TestMailGeneration(SimpleTestCase):
 
         self.assertIn("template_id", result)
         self.assertEquals(result["template_id"], "test_template")
+
+    def test_templating_sendgrid(self):
+        if SENDGRID_VERSION < "6":
+            msg = EmailMessage(
+                subject="Hello, World!",
+                body="Hello, World!",
+                from_email="Sam Smith <sam.smith@example.com>",
+                to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
+            )
+            msg.template_id = "test_template"
+            result = self.backend._build_sg_mail(msg)
+
+            self.assertIn("template_id", result)
+            self.assertEquals(result["template_id"], "test_template")
+            # Testing that for sendgrid v5 the code behave in the same way
+            self.assertEquals(result["content"], [{"type": "text/plain", "value": "Hello, World!"}])
+            self.assertEquals(result["subject"], "Hello, World!")
+            self.assertEquals(result["personalizations"][0]["subject"], "Hello, World!")
+        else:
+            msg = EmailMessage(
+                from_email="Sam Smith <sam.smith@example.com>",
+                to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
+            )
+            msg.template_id = "test_template"
+            msg.dynamic_template_data = {
+                "subject": "Hello, World!",
+                "content": "Hello, World!",
+                "link": "http://hello.com"
+            }
+            result = self.backend._build_sg_mail(msg)
+
+            self.assertIn("template_id", result)
+            self.assertEquals(result["template_id"], "test_template")
+            self.assertEquals(result["personalizations"][0]["dynamic_template_data"], msg.dynamic_template_data)
+            # Subject and content should not be between request param
+            self.assertNotIn("subject", result)
+            self.assertNotIn("content", result)
 
     def test_asm(self):
         msg = EmailMessage(
