@@ -1,3 +1,5 @@
+import logging
+
 from future.builtins import str
 import base64
 from email.mime.base import MIMEBase
@@ -21,6 +23,8 @@ from sendgrid.helpers.mail import (
 
 from python_http_client.exceptions import HTTPError
 
+from sendgrid_backend.signals import sendgrid_email_sent
+
 SENDGRID_VERSION = sendgrid.__version__
 
 # Need to change imports because of breaking changes in sendgrid's v6 api
@@ -33,6 +37,8 @@ else:
 
 if sys.version_info >= (3.0, 0.0):
     basestring = str
+
+logger = logging.getLogger(__name__)
 
 
 class SendgridBackend(BaseEmailBackend):
@@ -118,16 +124,23 @@ class SendgridBackend(BaseEmailBackend):
         for msg in email_messages:
             data = self._build_sg_mail(msg)
 
+            fail_flag = True
             try:
                 resp = self.sg.client.mail.send.post(request_body=data)
                 msg.extra_headers['status'] = resp.status_code
                 x_message_id = resp.headers.get('x-message-id', None)
                 if x_message_id:
                     msg.extra_headers['message_id'] = x_message_id
+                else:
+                    logger.warning('No x_message_id header received from sendgrid api')
                 success += 1
-            except HTTPError:
+                fail_flag = False
+            except HTTPError as e:
+                logger.error("Failed to send email %s" % e)
                 if not self.fail_silently:
                     raise
+            finally:
+                sendgrid_email_sent.send(sender=self.__class__, message=msg, fail_flag=fail_flag)
         return success
 
     def _create_sg_attachment(self, django_attch):
@@ -188,7 +201,6 @@ class SendgridBackend(BaseEmailBackend):
         mail = Mail()
 
         mail.from_email = Email(*self._parse_email_address(msg.from_email))
-        mail.subject = msg.subject
 
         personalization = Personalization()
         for addr in msg.to:
@@ -204,21 +216,19 @@ class SendgridBackend(BaseEmailBackend):
             for k, v in msg.custom_args.items():
                 personalization.add_custom_arg(CustomArg(k, v))
 
-        personalization.subject = msg.subject
+        if self._is_transaction_template(msg):
+            if msg.subject:
+                logger.warning("Message subject is ignored in transactional template, "
+                               "please add it as template variable (e.g. {{ subject }}")
+                # See https://github.com/sendgrid/sendgrid-nodejs/issues/843
+        else:
+            personalization.subject = msg.subject
 
         for k, v in msg.extra_headers.items():
             if k.lower() == "reply-to":
                 mail.reply_to = Email(v)
             else:
                 personalization.add_header(Header(k, v))
-
-        if hasattr(msg, "template_id"):
-            mail.template_id = msg.template_id
-            if hasattr(msg, "substitutions"):
-                for k, v in msg.substitutions.items():
-                    personalization.add_substitution(Substitution(k, v))
-            if hasattr(msg, "dynamic_template_data"):
-                personalization.dynamic_template_data = msg.dynamic_template_data
 
         if hasattr(msg, "ip_pool_name"):
             if not isinstance(msg.ip_pool_name, basestring):
@@ -249,8 +259,6 @@ class SendgridBackend(BaseEmailBackend):
                         type(msg.send_at)))
             personalization.send_at = msg.send_at
 
-        mail.add_personalization(personalization)
-
         if hasattr(msg, "reply_to") and msg.reply_to:
             if mail.reply_to:
                 # If this code path is triggered, the reply_to on the sg mail was set in a header above
@@ -270,18 +278,39 @@ class SendgridBackend(BaseEmailBackend):
             sg_attch = self._create_sg_attachment(attch)
             mail.add_attachment(sg_attch)
 
-        msg.body = ' ' if msg.body == '' else msg.body
-
-        if isinstance(msg, EmailMultiAlternatives):
-            mail.add_content(Content("text/plain", msg.body))
-            for alt in msg.alternatives:
-                if alt[1] == "text/html":
-                    mail.add_content(Content(alt[1], alt[0]))
-        elif msg.content_subtype == "html":
-            mail.add_content(Content("text/plain", " "))
-            mail.add_content(Content("text/html", msg.body))
+        if self._is_transaction_template(msg):
+            if msg.body:
+                logger.warning("Message body is ignored in transactional template")
         else:
-            mail.add_content(Content("text/plain", msg.body))
+            msg.body = ' ' if msg.body == '' else msg.body
+
+        if hasattr(msg, "template_id"):
+            # Template mails should not have subject and content attributes
+            mail.template_id = msg.template_id
+            if hasattr(msg, "substitutions"):
+                for k, v in msg.substitutions.items():
+                    personalization.add_substitution(Substitution(k, v))
+            if hasattr(msg, "dynamic_template_data"):
+                if SENDGRID_VERSION < "6":
+                    logger.warning("dynamic_template_data not available in sendgrid version < 6")
+                personalization.dynamic_template_data = msg.dynamic_template_data
+
+        if not self._is_transaction_template(msg):
+            # In sendgrid v6 we should not specify subject and content between request parameter
+            # when we are sending a request for a transactional template
+            mail.subject = msg.subject
+            if isinstance(msg, EmailMultiAlternatives):
+                mail.add_content(Content("text/plain", msg.body))
+                for alt in msg.alternatives:
+                    if alt[1] == "text/html":
+                        mail.add_content(Content(alt[1], alt[0]))
+            elif msg.content_subtype == "html":
+                mail.add_content(Content("text/plain", " "))
+                mail.add_content(Content("text/html", msg.body))
+            else:
+                mail.add_content(Content("text/plain", msg.body))
+
+        mail.add_personalization(personalization)
 
         if hasattr(msg, "categories"):
             for cat in msg.categories:
@@ -307,3 +336,6 @@ class SendgridBackend(BaseEmailBackend):
         mail.tracking_settings = tracking_settings
 
         return mail.get()
+
+    def _is_transaction_template(self, msg):
+        return SENDGRID_VERSION >= "6" and hasattr(msg, "template_id")
