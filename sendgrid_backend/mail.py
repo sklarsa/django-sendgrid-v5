@@ -233,7 +233,7 @@ class SendgridBackend(BaseEmailBackend):
         if hasattr(msg, "ip_pool_name"):
             if not isinstance(msg.ip_pool_name, basestring):
                 raise ValueError(
-                    "ip_pool_name must be a {}, got: {}; ".format(
+                    "ip_pool_name must be a basestring, got: {}; ".format(
                         type(msg.ip_pool_name)))
 
             # Validate ip_pool_name length before attempting to add
