@@ -50,7 +50,7 @@ from django.core.mail import EmailMessage
 
 msg = EmailMessage(
   from_email='to@example.com',
-  to=['to@example.com],
+  to=['to@example.com'],
 )
 msg.template_id = "your-dynamic-template-id"
 msg.dynamic_template_data = {
