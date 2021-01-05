@@ -26,6 +26,10 @@ class TestMailGeneration(SimpleTestCase):
             self.backend = SendgridBackend()
 
     def test_EmailMessage(self):
+        """
+        Tests that an EmailMessage object is properly serialized into the format
+        expected by Sendgrid's API
+        """
         msg = EmailMessage(
             subject="Hello, World!",
             body="Hello, World!",
@@ -81,7 +85,9 @@ class TestMailGeneration(SimpleTestCase):
         self.assertDictEqual(result, expected)
 
     def test_EmailMessage_attributes(self):
-        """Test that send_at and categories attributes are correctly written through to output."""
+        """
+        Test that send_at and categories attributes are correctly written through to output.
+        """
         msg = EmailMessage(
             subject="Hello, World!",
             body="Hello, World!",
@@ -134,6 +140,9 @@ class TestMailGeneration(SimpleTestCase):
         self.assertDictEqual(result, expected)
 
     def test_EmailMultiAlternatives(self):
+        """
+        Tests that django's EmailMultiAlternatives class works as expected.
+        """
         msg = EmailMultiAlternatives(
             subject="Hello, World!",
             body=" ",
@@ -201,6 +210,10 @@ class TestMailGeneration(SimpleTestCase):
         self.assertDictEqual(result, expected)
 
     def test_EmailMultiAlternatives__unicode_attachment(self):
+        """
+        Tests that django's EmailMultiAlternatives class works as expected with a unicode-formatted
+        attachment.
+        """
         msg = EmailMultiAlternatives(
             subject="Hello, World!",
             body=" ",
@@ -286,6 +299,9 @@ class TestMailGeneration(SimpleTestCase):
         self.assertDictEqual(result, expected)
 
     def test_reply_to(self):
+        """
+        Tests reply-to functionality
+        """
         kwargs = {
             "subject": "Hello, World!",
             "body": "Hello, World!",
@@ -313,6 +329,9 @@ class TestMailGeneration(SimpleTestCase):
         self.assertDictEqual(result["reply_to"], {"email": "sam.smith@example.com", "name": "Sam Smith"})
 
     def test_mime(self):
+        """
+        Tests MIMEImage support for the EmailMultiAlternatives class
+        """
         msg = EmailMultiAlternatives(
             subject="Hello, World!",
             body=" ",
@@ -342,6 +361,10 @@ class TestMailGeneration(SimpleTestCase):
         self.assertEqual(result["attachments"][0]["type"], "image/png")
 
     def test_templating_sendgrid_v5(self):
+        """
+        Tests that basic templating functionality works.  This is a simple check and
+        the results are valid for both Sendgrid versions 5 and 6.
+        """
         msg = EmailMessage(
             subject="Hello, World!",
             body="Hello, World!",
@@ -355,6 +378,11 @@ class TestMailGeneration(SimpleTestCase):
         self.assertEquals(result["template_id"], "test_template")
 
     def test_templating_sendgrid(self):
+        """
+        Tests more complex templating scenarios for versions 5 and 6 of sendgrid
+
+        todo: break this up into separate tests
+        """
         if SENDGRID_VERSION < "6":
             msg = EmailMessage(
                 subject="Hello, World!",
@@ -392,6 +420,9 @@ class TestMailGeneration(SimpleTestCase):
             self.assertNotIn("content", result)
 
     def test_asm(self):
+        """
+        Tests that unsubscribe group functionality works
+        """
         msg = EmailMessage(
             subject="Hello, World!",
             body="Hello, World!",
@@ -416,6 +447,9 @@ class TestMailGeneration(SimpleTestCase):
         self.assertIn("groups_to_display", result["asm"])
 
     def test_EmailMessage_custom_args(self):
+        """
+        Tests that the custom_args property is serialized correctly
+        """
         msg = EmailMessage(
             subject="Hello, World!",
             body="Hello, World!",

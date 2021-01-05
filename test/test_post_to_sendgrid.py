@@ -10,6 +10,14 @@ from django.test.testcases import SimpleTestCase
 class TestPostToSendgrid(SimpleTestCase):
 
     def test_post(self):
+        """
+        Sends a POST to sendgrid's live API using a private API key that is stored
+        in TravisCI.
+
+        This test can only be run on the master branch to avoid malicious code in PRs
+        that could leak the SENDGRID_API_KEY.
+        """
+
         TRAVIS_PULL_REQUEST = os.environ.get("TRAVIS_PULL_REQUEST")
         SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
         if not SENDGRID_API_KEY:
