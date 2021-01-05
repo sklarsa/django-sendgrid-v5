@@ -506,7 +506,6 @@ class TestMailGeneration(SimpleTestCase):
 
         self.assertDictEqual(result, expected)
 
-
     """
     todo: Implement these
     def test_attachments(self):
