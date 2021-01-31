@@ -21,7 +21,7 @@ from sendgrid.helpers.mail import (
     Personalization, SandBoxMode, Substitution, TrackingSettings, CustomArg, ClickTracking
 )
 
-from python_http_client.exceptions import HTTPError
+from python_http_client.exceptions import HTTPError, BadRequestsError
 
 from sendgrid_backend.signals import sendgrid_email_sent
 
@@ -136,7 +136,8 @@ class SendgridBackend(BaseEmailBackend):
                 success += 1
                 fail_flag = False
             except HTTPError as e:
-                logger.error("Failed to send email %s" % e)
+                message = getattr(e, "body", None)
+                logger.error("Failed to send email, error: %s, response body: %s" % (e, message))
                 if not self.fail_silently:
                     raise
             finally:
