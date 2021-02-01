@@ -21,7 +21,7 @@ from sendgrid.helpers.mail import (
     Personalization, SandBoxMode, Substitution, TrackingSettings, CustomArg, ClickTracking
 )
 
-from python_http_client.exceptions import HTTPError, BadRequestsError
+from python_http_client.exceptions import HTTPError
 
 from sendgrid_backend.signals import sendgrid_email_sent
 
