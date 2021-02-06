@@ -15,7 +15,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMultiAlternatives
 from django.core.mail.backends.base import BaseEmailBackend
 
-import sendgrid
+from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import (
     Attachment, Category, Content, Email, Header, Mail, MailSettings, OpenTracking,
     Personalization, SandBoxMode, Substitution, TrackingSettings, CustomArg, ClickTracking
@@ -23,13 +23,13 @@ from sendgrid.helpers.mail import (
 
 from python_http_client.exceptions import HTTPError
 
+from sendgrid_backend.util import SENDGRID_5, SENDGRID_6
 from sendgrid_backend.signals import sendgrid_email_sent
 
-SENDGRID_VERSION = sendgrid.__version__
 
 # Need to change imports because of breaking changes in sendgrid's v6 api
 # https://github.com/sendgrid/sendgrid-python/releases/tag/v6.0.0
-if SENDGRID_VERSION < '6':
+if SENDGRID_5:
     from sendgrid.helpers.mail import ASM
 else:
     from sendgrid.helpers.mail import Asm as ASM
@@ -52,9 +52,9 @@ class SendgridBackend(BaseEmailBackend):
     def __init__(self, *args, **kwargs):
         super(SendgridBackend, self).__init__(*args, **kwargs)
         if "api_key" in kwargs:
-            self.sg = sendgrid.SendGridAPIClient(api_key=kwargs["api_key"])
+            self.sg = SendGridAPIClient(api_key=kwargs["api_key"])
         elif hasattr(settings, "SENDGRID_API_KEY") and settings.SENDGRID_API_KEY:
-            self.sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+            self.sg = SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
         else:
             raise ImproperlyConfigured("settings.py must contain a value for SENDGRID_API_KEY.  " +
                                        "You may also pass a value to the api_key argument (optional).")
@@ -151,7 +151,7 @@ class SendgridBackend(BaseEmailBackend):
         """
 
         def set_prop(attachment, prop_name, value):
-            if SENDGRID_VERSION < '6':
+            if SENDGRID_5:
                 setattr(attachment, prop_name, value)
             else:
                 if prop_name == "filename":
@@ -244,7 +244,7 @@ class SendgridBackend(BaseEmailBackend):
                     "index.html#-Request-Body-Parameters".format(
                         len(msg.ip_pool_name)))
 
-            if SENDGRID_VERSION < "6":
+            if SENDGRID_5:
                 ip_pool_name = msg.ip_pool_name
             else:
                 ip_pool_name = IpPoolName(msg.ip_pool_name)
@@ -291,7 +291,7 @@ class SendgridBackend(BaseEmailBackend):
                 for k, v in msg.substitutions.items():
                     personalization.add_substitution(Substitution(k, v))
             if hasattr(msg, "dynamic_template_data"):
-                if SENDGRID_VERSION < "6":
+                if SENDGRID_5:
                     logger.warning("dynamic_template_data not available in sendgrid version < 6")
                 personalization.dynamic_template_data = msg.dynamic_template_data
 
@@ -338,4 +338,4 @@ class SendgridBackend(BaseEmailBackend):
         return mail.get()
 
     def _is_transaction_template(self, msg):
-        return SENDGRID_VERSION >= "6" and hasattr(msg, "template_id")
+        return SENDGRID_6 and hasattr(msg, "template_id")

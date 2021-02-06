@@ -5,7 +5,8 @@ from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
 
-from sendgrid_backend.mail import SendgridBackend, SENDGRID_VERSION
+from sendgrid_backend.mail import SendgridBackend
+from sendgrid_backend.util import SENDGRID_5
 
 if sys.version_info >= (3.0, 0.0, ):
     from email.mime.image import MIMEImage
@@ -97,7 +98,7 @@ class TestMailGeneration(SimpleTestCase):
 
         # Set new attributes as message property
         msg.send_at = 1518108670
-        if SENDGRID_VERSION < '6':
+        if SENDGRID_5:
             msg.categories = ['mammal', 'dog']
         else:
             msg.categories = ['dog', 'mammal']
@@ -231,7 +232,7 @@ class TestMailGeneration(SimpleTestCase):
             ("file.csv", b"C\xc3\xb4te d\xe2\x80\x99Ivoire", "text/csv"),
         ]
 
-        if SENDGRID_VERSION < '6':
+        if SENDGRID_5:
             for a in attachments:
                 msg.attach(*a)
         else:
@@ -383,7 +384,7 @@ class TestMailGeneration(SimpleTestCase):
 
         todo: break this up into separate tests
         """
-        if SENDGRID_VERSION < "6":
+        if SENDGRID_5:
             msg = EmailMessage(
                 subject="Hello, World!",
                 body="Hello, World!",
