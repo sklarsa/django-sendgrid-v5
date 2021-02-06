@@ -43,9 +43,6 @@ else:
     from sendgrid.helpers.mail import Asm as ASM
     from sendgrid.helpers.mail import IpPoolName
 
-if sys.version_info >= (3.0, 0.0):
-    basestring = str
-
 logger = logging.getLogger(__name__)
 
 
@@ -241,9 +238,9 @@ class SendgridBackend(BaseEmailBackend):
                 personalization.add_header(Header(k, v))
 
         if hasattr(msg, "ip_pool_name"):
-            if not isinstance(msg.ip_pool_name, basestring):
+            if not isinstance(msg.ip_pool_name, str):
                 raise ValueError(
-                    "ip_pool_name must be a basestring, got: {}; ".format(
+                    "ip_pool_name must be a str, got: {}; ".format(
                         type(msg.ip_pool_name)
                     )
                 )
@@ -286,7 +283,7 @@ class SendgridBackend(BaseEmailBackend):
                         + "Reply-To header value != reply_to property value."
                     )
 
-            if not isinstance(msg.reply_to, basestring):
+            if not isinstance(msg.reply_to, str):
                 if len(msg.reply_to) > 1:
                     raise ValueError(
                         "Sendgrid only allows 1 email in the reply-to field"

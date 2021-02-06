@@ -1,10 +1,7 @@
 import os
 import sys
 
-if sys.version_info >= (3.0, 0.0):
-    from unittest.mock import MagicMock
-else:
-    from mock import MagicMock
+from unittest.mock import MagicMock
 
 import warnings
 

@@ -8,14 +8,7 @@ from django.test.testcases import SimpleTestCase
 from sendgrid_backend.mail import SendgridBackend
 from sendgrid_backend.util import SENDGRID_5
 
-if sys.version_info >= (
-    3.0,
-    0.0,
-):
-    from email.mime.image import MIMEImage
-else:
-    from email.MIMEImage import MIMEImage
-
+from email.mime.image import MIMEImage
 
 class TestMailGeneration(SimpleTestCase):
 
@@ -339,18 +332,10 @@ class TestMailGeneration(SimpleTestCase):
         self.assertEqual(result["attachments"][0]["content_id"], "linux_penguin")
 
         with open("test/linux-penguin.png", "rb") as f:
-            if sys.version_info >= (
-                3.0,
-                0.0,
-            ):
-                self.assertEqual(
-                    bytearray(result["attachments"][0]["content"], "utf-8"),
-                    base64.b64encode(f.read()),
-                )
-            else:
-                self.assertEqual(
-                    result["attachments"][0]["content"], base64.b64encode(f.read())
-                )
+            self.assertEqual(
+                bytearray(result["attachments"][0]["content"], "utf-8"),
+                base64.b64encode(f.read()),
+            )
         self.assertEqual(result["attachments"][0]["type"], "image/png")
 
     def test_templating_sendgrid_v5(self):
