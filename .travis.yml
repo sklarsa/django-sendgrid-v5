@@ -8,5 +8,7 @@ python:
   - 3.8
 install: pip install -r dev-requirements.txt
 script:
-  - tox
   - flake8 sendgrid_backend/
+  - isort -rc ./
+  - black --check ./
+  - tox
