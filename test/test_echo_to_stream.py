@@ -1,9 +1,7 @@
 import os
 import sys
-
-from unittest.mock import MagicMock
-
 import warnings
+from unittest.mock import MagicMock
 
 from django.core.mail import EmailMessage
 from django.test import override_settings

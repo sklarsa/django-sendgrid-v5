@@ -1,5 +1,6 @@
 import base64
 import sys
+from email.mime.image import MIMEImage
 
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.test import override_settings
@@ -8,7 +9,6 @@ from django.test.testcases import SimpleTestCase
 from sendgrid_backend.mail import SendgridBackend
 from sendgrid_backend.util import SENDGRID_5
 
-from email.mime.image import MIMEImage
 
 class TestMailGeneration(SimpleTestCase):
 

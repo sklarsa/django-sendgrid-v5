@@ -7,7 +7,7 @@ import threading
 import uuid
 import warnings
 from email.mime.base import MIMEBase
-from typing import Dict, Iterable, Optional, Union, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Iterable, Optional, Tuple, Union
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -206,7 +206,7 @@ class SendgridBackend(BaseEmailBackend):
         """
         Returns a tuple of (addr, name) from an address string
         """
-        name, addr = email.utils.parseaddr(address) # type: Optional[str], str
+        name, addr = email.utils.parseaddr(address)  # type: Optional[str], str
         if not name:
             name = None
         return addr, name
