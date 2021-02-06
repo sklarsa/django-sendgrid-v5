@@ -6,7 +6,6 @@ from sendgrid_backend.mail import SendgridBackend
 
 
 class TestSandboxMode(SimpleTestCase):
-
     def test_sandbox_mode(self):
         """
         Tests combinations of DEBUG and SENDGRID_SANDBOX_MODE_IN_DEBUG to ensure that

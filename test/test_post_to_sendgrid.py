@@ -1,14 +1,12 @@
 import os
 
-from nose.plugins.skip import SkipTest
-
 from django.core.mail import EmailMessage
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
+from nose.plugins.skip import SkipTest
 
 
 class TestPostToSendgrid(SimpleTestCase):
-
     def test_post(self):
         """
         Sends a POST to sendgrid's live API using a private API key that is stored

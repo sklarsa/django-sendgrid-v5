@@ -1,11 +1,11 @@
-from django.conf import settings
-
 import sendgrid
+from django.conf import settings
 
 SENDGRID_VERSION = sendgrid.__version__
 
-SENDGRID_5 = SENDGRID_VERSION < '6'
-SENDGRID_6 = SENDGRID_VERSION >= '6'
+SENDGRID_5 = SENDGRID_VERSION < "6"
+SENDGRID_6 = SENDGRID_VERSION >= "6"
+
 
 def get_django_setting(setting_str, default=None):
     """
