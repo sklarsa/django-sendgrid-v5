@@ -23,7 +23,7 @@ from sendgrid.helpers.mail import (
 
 from python_http_client.exceptions import HTTPError
 
-from sendgrid_backend.util import SENDGRID_5, SENDGRID_6
+from sendgrid_backend.util import SENDGRID_5, SENDGRID_6, get_django_setting
 from sendgrid_backend.signals import sendgrid_email_sent
 
 
@@ -59,33 +59,17 @@ class SendgridBackend(BaseEmailBackend):
             raise ImproperlyConfigured("settings.py must contain a value for SENDGRID_API_KEY.  " +
                                        "You may also pass a value to the api_key argument (optional).")
 
-        sandbox_mode_in_debug = True
-        if hasattr(settings, "SENDGRID_SANDBOX_MODE_IN_DEBUG"):
-            sandbox_mode_in_debug = settings.SENDGRID_SANDBOX_MODE_IN_DEBUG
-
+        sandbox_mode_in_debug = get_django_setting("SENDGRID_SANDBOX_MODE_IN_DEBUG", True)
         self.sandbox_mode = bool(settings.DEBUG) and bool(sandbox_mode_in_debug)
 
         if self.sandbox_mode:
             warnings.warn("Sendgrid email backend is in sandbox mode!  Emails will not be delivered.")
 
-        track_email = True
-        if hasattr(settings, "SENDGRID_TRACK_EMAIL_OPENS"):
-            track_email = settings.SENDGRID_TRACK_EMAIL_OPENS
-        self.track_email = track_email
+        self.track_email = get_django_setting("SENDGRID_TRACK_EMAIL_OPENS", True)
+        self.track_clicks_html = get_django_setting("SENDGRID_TRACK_CLICKS_HTML", True)
+        self.track_clicks_plain = get_django_setting("SENDGRID_TRACK_CLICKS_PLAIN", True)
 
-        track_clicks_html = True
-        if hasattr(settings, "SENDGRID_TRACK_CLICKS_HTML"):
-            track_clicks_html = settings.SENDGRID_TRACK_CLICKS_HTML
-
-        self.track_clicks_html = track_clicks_html
-
-        track_clicks_plain = True
-        if hasattr(settings, "SENDGRID_TRACK_CLICKS_PLAIN"):
-            track_clicks_plain = settings.SENDGRID_TRACK_CLICKS_PLAIN
-
-        self.track_clicks_plain = track_clicks_plain
-
-        if hasattr(settings, "SENDGRID_ECHO_TO_STDOUT") and settings.SENDGRID_ECHO_TO_STDOUT:
+        if get_django_setting("SENDGRID_ECHO_TO_STDOUT"):
             self._lock = threading.RLock()
             self.stream = kwargs.pop('stream', sys.stdout)
         else:
