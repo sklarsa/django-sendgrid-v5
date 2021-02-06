@@ -107,7 +107,9 @@ class SendgridBackend(BaseEmailBackend):
         self.stream.write("\n")
 
     def echo_to_output_stream(self, email_messages: Iterable[EmailMessage]) -> None:
-        """ Write all messages to the stream in a thread-safe way. """
+        """
+        Write all messages to the stream in a thread-safe way.
+        """
         if not email_messages:
             return
         with self._lock:
@@ -194,9 +196,6 @@ class SendgridBackend(BaseEmailBackend):
 
             set_prop(sg_attch, "filename", filename)
 
-            if isinstance(content, str):
-                content = content.encode()
-
             # todo: Read content if stream?
             set_prop(sg_attch, "content", base64.b64encode(content).decode())
             set_prop(sg_attch, "type", mimetype)
@@ -212,7 +211,18 @@ class SendgridBackend(BaseEmailBackend):
             name = None
         return addr, name
 
-    def _build_sg_mail(self, msg: EmailMessage) -> Dict:
+    def _build_sg_mail(self, msg: Union[EmailMessage, Mail]) -> Dict:
+        """
+        Serializes a Django EmailMessage or Sendgrid Mail object into its JSON
+        representation.
+
+        Returns
+        """
+        # If a mail message is already an instance of the sendgrid.Mail object,
+        # serialize it and return
+        if isinstance(msg, Mail):
+            return msg.get()
+
         mail = Mail()
 
         mail.from_email = Email(*self._parse_email_address(msg.from_email))
@@ -228,7 +238,7 @@ class SendgridBackend(BaseEmailBackend):
             personalization.add_bcc(Email(*self._parse_email_address(addr)))
 
         if hasattr(msg, "custom_args"):
-            for k, v in msg.custom_args.items():
+            for k, v in msg.custom_args.items():  # type: ignore
                 personalization.add_custom_arg(CustomArg(k, v))
 
         if self._is_transaction_template(msg):
@@ -248,37 +258,37 @@ class SendgridBackend(BaseEmailBackend):
                 personalization.add_header(Header(k, v))
 
         if hasattr(msg, "ip_pool_name"):
-            if not isinstance(msg.ip_pool_name, str):
+            if not isinstance(msg.ip_pool_name, str):  # type: ignore
                 raise ValueError(
                     "ip_pool_name must be a str, got: {}; ".format(
-                        type(msg.ip_pool_name)
+                        type(msg.ip_pool_name)  # type: ignore
                     )
                 )
 
             # Validate ip_pool_name length before attempting to add
-            if not 2 <= len(msg.ip_pool_name) <= 64:
+            if not 2 <= len(msg.ip_pool_name) <= 64:  # type: ignore
                 raise ValueError(
                     "the number of characters of ip_pool_name must be min 2 and max 64, got: {}; "
                     "see https://sendgrid.com/docs/API_Reference/Web_API_v3/Mail/"
-                    "index.html#-Request-Body-Parameters".format(len(msg.ip_pool_name))
+                    "index.html#-Request-Body-Parameters".format(len(msg.ip_pool_name))  # type: ignore
                 )
 
             if SENDGRID_5:
-                ip_pool_name = msg.ip_pool_name
+                ip_pool_name = msg.ip_pool_name  # type: ignore
             else:
-                ip_pool_name = IpPoolName(msg.ip_pool_name)
+                ip_pool_name = IpPoolName(msg.ip_pool_name)  # type: ignore
             mail.ip_pool_name = ip_pool_name
 
         # write through the send_at attribute
         if hasattr(msg, "send_at"):
-            if not isinstance(msg.send_at, int):
+            if not isinstance(msg.send_at, int):  # type: ignore
                 raise ValueError(
                     "send_at must be an integer, got: {}; "
                     "see https://sendgrid.com/docs/API_Reference/SMTP_API/scheduling_parameters.html#-Send-At".format(
-                        type(msg.send_at)
+                        type(msg.send_at)  # type: ignore
                     )
                 )
-            personalization.send_at = msg.send_at
+            personalization.send_at = msg.send_at  # type: ignore
 
         if hasattr(msg, "reply_to") and msg.reply_to:
             if mail.reply_to:
@@ -314,16 +324,16 @@ class SendgridBackend(BaseEmailBackend):
 
         if hasattr(msg, "template_id"):
             # Template mails should not have subject and content attributes
-            mail.template_id = msg.template_id
+            mail.template_id = msg.template_id  # type: ignore
             if hasattr(msg, "substitutions"):
-                for k, v in msg.substitutions.items():
+                for k, v in msg.substitutions.items():  # type: ignore
                     personalization.add_substitution(Substitution(k, v))
             if hasattr(msg, "dynamic_template_data"):
                 if SENDGRID_5:
                     logger.warning(
                         "dynamic_template_data not available in sendgrid version < 6"
                     )
-                personalization.dynamic_template_data = msg.dynamic_template_data
+                personalization.dynamic_template_data = msg.dynamic_template_data  # type: ignore
 
         if not self._is_transaction_template(msg):
             # In sendgrid v6 we should not specify subject and content between request parameter
@@ -343,17 +353,17 @@ class SendgridBackend(BaseEmailBackend):
         mail.add_personalization(personalization)
 
         if hasattr(msg, "categories"):
-            for cat in msg.categories:
+            for cat in msg.categories:  # type: ignore
                 mail.add_category(Category(cat))
 
         if hasattr(msg, "asm"):
-            if "group_id" not in msg.asm:
+            if "group_id" not in msg.asm:  # type: ignore
                 raise KeyError("group_id not found in asm")
 
-            if "groups_to_display" in msg.asm:
-                mail.asm = ASM(msg.asm["group_id"], msg.asm["groups_to_display"])
+            if "groups_to_display" in msg.asm:  # type: ignore
+                mail.asm = ASM(msg.asm["group_id"], msg.asm["groups_to_display"])  # type: ignore
             else:
-                mail.asm = ASM(msg.asm["group_id"])
+                mail.asm = ASM(msg.asm["group_id"])  # type: ignore
 
         mail_settings = MailSettings()
         mail_settings.sandbox_mode = SandBoxMode(self.sandbox_mode)

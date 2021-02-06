@@ -10,4 +10,5 @@ script:
   - flake8 sendgrid_backend/
   - isort -rc ./
   - black --check ./
+  - mypy sendgrid_backend/
   - tox
