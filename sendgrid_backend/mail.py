@@ -7,12 +7,12 @@ import threading
 import uuid
 import warnings
 from email.mime.base import MIMEBase
+from typing import Dict, Iterable, Optional, Union, Tuple, TYPE_CHECKING
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.core.mail.backends.base import BaseEmailBackend
-from future.builtins import str
 from python_http_client.exceptions import HTTPError
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import (
@@ -35,6 +35,8 @@ from sendgrid.helpers.mail import (
 from sendgrid_backend.signals import sendgrid_email_sent
 from sendgrid_backend.util import SENDGRID_5, SENDGRID_6, get_django_setting
 
+DjangoAttachment = Union[Tuple[str, bytes, str], MIMEBase]
+
 # Need to change imports because of breaking changes in sendgrid's v6 api
 # https://github.com/sendgrid/sendgrid-python/releases/tag/v6.0.0
 if SENDGRID_5:
@@ -54,6 +56,9 @@ class SendgridBackend(BaseEmailBackend):
     This class uses the api key set in the django setting, SENDGRID_API_KEY.  If you have not set this value (or wish
     to override it), this backend accepts an api_key argument that supersedes the django setting
     """
+
+    if TYPE_CHECKING:
+        fail_silently = False
 
     def __init__(self, *args, **kwargs):
         super(SendgridBackend, self).__init__(*args, **kwargs)
@@ -90,7 +95,7 @@ class SendgridBackend(BaseEmailBackend):
             self._lock = None
             self.stream = None
 
-    def write_to_stream(self, message):
+    def write_to_stream(self, message: EmailMessage) -> None:
         msg = message.message()
         msg_data = msg.as_bytes()
         charset = (
@@ -101,7 +106,7 @@ class SendgridBackend(BaseEmailBackend):
         self.stream.write("-" * 79)
         self.stream.write("\n")
 
-    def echo_to_output_stream(self, email_messages):
+    def echo_to_output_stream(self, email_messages: Iterable[EmailMessage]) -> None:
         """ Write all messages to the stream in a thread-safe way. """
         if not email_messages:
             return
@@ -117,7 +122,11 @@ class SendgridBackend(BaseEmailBackend):
                 if not self.fail_silently:
                     raise
 
-    def send_messages(self, email_messages):
+    def send_messages(self, email_messages: Iterable[EmailMessage]) -> int:
+        """
+        Sends a list of EmailMessage objects via Sendgrid's HTTP API.
+        Returns an integer representing the number of messages sent.
+        """
         if self.stream:
             self.echo_to_output_stream(email_messages)
         success = 0
@@ -145,7 +154,7 @@ class SendgridBackend(BaseEmailBackend):
                 )
         return success
 
-    def _create_sg_attachment(self, django_attch):
+    def _create_sg_attachment(self, django_attch: DjangoAttachment) -> Attachment:
         """
         Handles the conversion between a django attachment object and a sendgrid attachment object.
         Due to differences between sendgrid's API versions, use this method when constructing attachments to ensure
@@ -184,25 +193,26 @@ class SendgridBackend(BaseEmailBackend):
             filename, content, mimetype = django_attch
 
             set_prop(sg_attch, "filename", filename)
-            # Convert content from chars to bytes, in both Python 2 and 3.
-            # todo: Read content if stream?
+
             if isinstance(content, str):
-                content = content.encode("utf-8")
+                content = content.encode()
+
+            # todo: Read content if stream?
             set_prop(sg_attch, "content", base64.b64encode(content).decode())
             set_prop(sg_attch, "type", mimetype)
 
         return sg_attch
 
-    def _parse_email_address(self, address):
+    def _parse_email_address(self, address: str) -> Tuple[str, Optional[str]]:
         """
         Returns a tuple of (addr, name) from an address string
         """
-        name, addr = email.utils.parseaddr(address)
+        name, addr = email.utils.parseaddr(address) # type: Optional[str], str
         if not name:
             name = None
         return addr, name
 
-    def _build_sg_mail(self, msg):
+    def _build_sg_mail(self, msg: EmailMessage) -> Dict:
         mail = Mail()
 
         mail.from_email = Email(*self._parse_email_address(msg.from_email))
@@ -273,7 +283,7 @@ class SendgridBackend(BaseEmailBackend):
         if hasattr(msg, "reply_to") and msg.reply_to:
             if mail.reply_to:
                 # If this code path is triggered, the reply_to on the sg mail was set in a header above
-                reply_to = Email(*self._parse_email_address(msg.reply_to))
+                reply_to = Email(*self._parse_email_address(msg.reply_to[0]))
                 if (
                     reply_to.email != mail.reply_to.email
                     or reply_to.name != mail.reply_to.name
@@ -359,5 +369,5 @@ class SendgridBackend(BaseEmailBackend):
 
         return mail.get()
 
-    def _is_transaction_template(self, msg):
+    def _is_transaction_template(self, msg: EmailMessage) -> bool:
         return SENDGRID_6 and hasattr(msg, "template_id")

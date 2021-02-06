@@ -41,6 +41,5 @@ setup(
         "django >=1.8",
         "sendgrid >=5.0.0",
         "python-http-client >=3.0.0",
-        "future",
     ],
 )
