@@ -35,7 +35,7 @@ from sendgrid.helpers.mail import (
 from sendgrid_backend.signals import sendgrid_email_sent
 from sendgrid_backend.util import SENDGRID_5, SENDGRID_6, get_django_setting
 
-DjangoAttachment = Union[Tuple[str, bytes, str], MIMEBase]
+DjangoAttachment = Union[Tuple[str, Union[bytes, str], str], MIMEBase]
 
 # Need to change imports because of breaking changes in sendgrid's v6 api
 # https://github.com/sendgrid/sendgrid-python/releases/tag/v6.0.0
@@ -197,6 +197,10 @@ class SendgridBackend(BaseEmailBackend):
             set_prop(sg_attch, "filename", filename)
 
             # todo: Read content if stream?
+
+            if isinstance(content, str):
+                content = content.encode()
+
             set_prop(sg_attch, "content", base64.b64encode(content).decode())
             set_prop(sg_attch, "type", mimetype)
 
@@ -238,7 +242,7 @@ class SendgridBackend(BaseEmailBackend):
             personalization.add_bcc(Email(*self._parse_email_address(addr)))
 
         if hasattr(msg, "custom_args"):
-            for k, v in msg.custom_args.items():  # type: ignore
+            for k, v in msg.custom_args.items():
                 personalization.add_custom_arg(CustomArg(k, v))
 
         if self._is_transaction_template(msg):
@@ -258,37 +262,37 @@ class SendgridBackend(BaseEmailBackend):
                 personalization.add_header(Header(k, v))
 
         if hasattr(msg, "ip_pool_name"):
-            if not isinstance(msg.ip_pool_name, str):  # type: ignore
+            if not isinstance(msg.ip_pool_name, str):
                 raise ValueError(
                     "ip_pool_name must be a str, got: {}; ".format(
-                        type(msg.ip_pool_name)  # type: ignore
+                        type(msg.ip_pool_name)
                     )
                 )
 
             # Validate ip_pool_name length before attempting to add
-            if not 2 <= len(msg.ip_pool_name) <= 64:  # type: ignore
+            if not 2 <= len(msg.ip_pool_name) <= 64:
                 raise ValueError(
                     "the number of characters of ip_pool_name must be min 2 and max 64, got: {}; "
                     "see https://sendgrid.com/docs/API_Reference/Web_API_v3/Mail/"
-                    "index.html#-Request-Body-Parameters".format(len(msg.ip_pool_name))  # type: ignore
+                    "index.html#-Request-Body-Parameters".format(len(msg.ip_pool_name))
                 )
 
             if SENDGRID_5:
-                ip_pool_name = msg.ip_pool_name  # type: ignore
+                ip_pool_name = msg.ip_pool_name
             else:
-                ip_pool_name = IpPoolName(msg.ip_pool_name)  # type: ignore
+                ip_pool_name = IpPoolName(msg.ip_pool_name)
             mail.ip_pool_name = ip_pool_name
 
         # write through the send_at attribute
         if hasattr(msg, "send_at"):
-            if not isinstance(msg.send_at, int):  # type: ignore
+            if not isinstance(msg.send_at, int):
                 raise ValueError(
                     "send_at must be an integer, got: {}; "
                     "see https://sendgrid.com/docs/API_Reference/SMTP_API/scheduling_parameters.html#-Send-At".format(
-                        type(msg.send_at)  # type: ignore
+                        type(msg.send_at)
                     )
                 )
-            personalization.send_at = msg.send_at  # type: ignore
+            personalization.send_at = msg.send_at
 
         if hasattr(msg, "reply_to") and msg.reply_to:
             if mail.reply_to:
@@ -324,16 +328,16 @@ class SendgridBackend(BaseEmailBackend):
 
         if hasattr(msg, "template_id"):
             # Template mails should not have subject and content attributes
-            mail.template_id = msg.template_id  # type: ignore
+            mail.template_id = msg.template_id
             if hasattr(msg, "substitutions"):
-                for k, v in msg.substitutions.items():  # type: ignore
+                for k, v in msg.substitutions.items():
                     personalization.add_substitution(Substitution(k, v))
             if hasattr(msg, "dynamic_template_data"):
                 if SENDGRID_5:
                     logger.warning(
                         "dynamic_template_data not available in sendgrid version < 6"
                     )
-                personalization.dynamic_template_data = msg.dynamic_template_data  # type: ignore
+                personalization.dynamic_template_data = msg.dynamic_template_data
 
         if not self._is_transaction_template(msg):
             # In sendgrid v6 we should not specify subject and content between request parameter
@@ -353,17 +357,17 @@ class SendgridBackend(BaseEmailBackend):
         mail.add_personalization(personalization)
 
         if hasattr(msg, "categories"):
-            for cat in msg.categories:  # type: ignore
+            for cat in msg.categories:
                 mail.add_category(Category(cat))
 
         if hasattr(msg, "asm"):
-            if "group_id" not in msg.asm:  # type: ignore
+            if "group_id" not in msg.asm:
                 raise KeyError("group_id not found in asm")
 
-            if "groups_to_display" in msg.asm:  # type: ignore
-                mail.asm = ASM(msg.asm["group_id"], msg.asm["groups_to_display"])  # type: ignore
+            if "groups_to_display" in msg.asm:
+                mail.asm = ASM(msg.asm["group_id"], msg.asm["groups_to_display"])
             else:
-                mail.asm = ASM(msg.asm["group_id"])  # type: ignore
+                mail.asm = ASM(msg.asm["group_id"])
 
         mail_settings = MailSettings()
         mail_settings.sandbox_mode = SandBoxMode(self.sandbox_mode)
