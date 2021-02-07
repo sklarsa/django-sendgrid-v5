@@ -96,6 +96,8 @@ class SendgridBackend(BaseEmailBackend):
             self.stream = None
 
     def write_to_stream(self, message: EmailMessage) -> None:
+        assert self.stream is not None
+
         msg = message.message()
         msg_data = msg.as_bytes()
         charset = (
@@ -110,6 +112,9 @@ class SendgridBackend(BaseEmailBackend):
         """
         Write all messages to the stream in a thread-safe way.
         """
+        assert self._lock is not None
+        assert self.stream is not None
+
         if not email_messages:
             return
         with self._lock:
