@@ -215,18 +215,12 @@ class SendgridBackend(BaseEmailBackend):
             name = None
         return addr, name
 
-    def _build_sg_mail(self, msg: Union[EmailMessage, Mail]) -> Dict:
+    def _build_sg_mail(self, msg: EmailMessage) -> Dict:
         """
-        Serializes a Django EmailMessage or Sendgrid Mail object into its JSON
-        representation.
+        Serializes a Django EmailMessage into its JSON representation.
 
-        Returns
+        Returns a Dict of mail data to be consumed by the sendgrid api.
         """
-        # If a mail message is already an instance of the sendgrid.Mail object,
-        # serialize it and return
-        if isinstance(msg, Mail):
-            return msg.get()
-
         mail = Mail()
 
         mail.from_email = Email(*self._parse_email_address(msg.from_email))
