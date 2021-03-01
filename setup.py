@@ -16,6 +16,7 @@ setup(
     version=str(__version__),
     description="An implementation of Django's EmailBackend compatible with sendgrid-python v5+",
     long_description=long_description,
+    long_description_content_type='text/markdown',
     url="https://github.com/sklarsa/django-sendgrid-v5",
     license="MIT",
     author="Steven Sklar",
