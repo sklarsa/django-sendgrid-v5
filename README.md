@@ -1,7 +1,6 @@
 # django-sendgrid-v5
 
-[![Latest Release](https://img.shields.io/pypi/v/django-sendgrid-v5.svg)](https://pypi.python.org/pypi/django-sendgrid-v5/) [![Travis Build Status](https://travis-ci.com/sklarsa/django-sendgrid-v5.svg)](https://travis-ci.com/sklarsa/django-sendgrid-v5)
-[![codecov](https://codecov.io/gh/sklarsa/django-sendgrid-v5/branch/master/graph/badge.svg)](https://codecov.io/gh/sklarsa/django-sendgrid-v5)
+[![Latest Release](https://img.shields.io/pypi/v/django-sendgrid-v5.svg)](https://pypi.python.org/pypi/django-sendgrid-v5/)
 
 This package implements an email backend for Django that relies on sendgrid's REST API for message delivery.
 
