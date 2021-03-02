@@ -170,7 +170,9 @@ class SendgridBackend(BaseEmailBackend):
                 fail_flag = False
             except HTTPError as e:
                 message = getattr(e, "body", None)
-                logger.error("Failed to send email, error: %s, response body: %s" % (e, message))
+                logger.error(
+                    "Failed to send email, error: %s, response body: %s" % (e, message)
+                )
                 if not self.fail_silently:
                     raise
             finally:
