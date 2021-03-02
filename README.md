@@ -61,5 +61,55 @@ msg.send(fail_silently=False)
 
 For more usage examples, see the [tests](test/test_mail.py).
 
+### The kitchen sink EmailMessage (all of the supported sendgrid-specific properties)
+
+```python
+from django.core.mail import EmailMessage
+
+msg = EmailMessage(
+  from_email='to@example.com',
+  to=['to@example.com'],
+  cc=['cc@example.com'],
+  bcc=['bcc@example.com'],
+)
+
+# Personalization custom args
+# https://sendgrid.com/docs/for-developers/sending-email/personalizations/
+msg.custom_args = {'arg1': 'value1', 'arg2': 'value2'}
+
+# Reply to email address (sendgrid only supports 1 reply-to email address)
+msg.reply_to = 'reply-to@example.com'
+
+# Send at (accepts an integer per the sendgrid docs)
+# https://sendgrid.com/docs/API_Reference/SMTP_API/scheduling_parameters.html#-Send-At
+msg.send_at = 1600188812
+
+# Transactional templates
+# https://sendgrid.com/docs/ui/sending-email/how-to-send-an-email-with-dynamic-transactional-templates/
+msg.template_id = "your-dynamic-template-id"
+msg.dynamic_template_data = {  # Sendgrid v6+ only
+  "title": foo
+}
+msg.substitutions = {
+  "title": bar
+}
+
+# Unsubscribe groups
+# https://sendgrid.com/docs/ui/sending-email/unsubscribe-groups/
+msg.asm = {'group_id': 123, 'groups_to_display': ['group1', 'group2']}
+
+# Categories
+# https://sendgrid.com/docs/glossary/categories/
+msg.categories = ['category1', 'category2']
+
+# IP Pools
+# https://sendgrid.com/docs/ui/account-and-settings/ip-pools/
+msg.ip_pool_name = 'my-ip-pool'
+
+
+msg.send(fail_silently=False)
+```
+
+
 ## Examples
 - Marcelo Canina [(@marcanuy)](https://github.com/marcanuy) wrote a great article demonstrating how to integrate `django-sendgrid-v5` into your Django application on his site: [https://simpleit.rocks/python/django/adding-email-to-django-the-easiest-way/](https://simpleit.rocks/python/django/adding-email-to-django-the-easiest-way/)
