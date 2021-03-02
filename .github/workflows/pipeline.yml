@@ -26,6 +26,7 @@ jobs:
       run: mypy sendgrid_backend/
 
   test:
+    environment: 'Live API Test'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -43,5 +44,5 @@ jobs:
         pip install tox tox-gh-actions
     - name: Test with tox
       env:
-        SENDGRID_API_TOKEN: ${{ secrets.SENDGRID_API_TOKEN }}
+        SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
       run: tox
