@@ -1,5 +1,6 @@
 import base64
 import email.utils
+import io
 import logging
 import mimetypes
 import sys
@@ -62,6 +63,11 @@ class SendgridBackend(BaseEmailBackend):
 
     def __init__(self, *args, **kwargs):
         super(SendgridBackend, self).__init__(*args, **kwargs)
+
+        # Check for the API key either in the SENDGRID_API_KEY django setting,
+        # or passed as an argument to the init function, which takes precedence
+        # over the setting.
+
         if "api_key" in kwargs:
             self.sg = SendGridAPIClient(api_key=kwargs["api_key"])
         elif hasattr(settings, "SENDGRID_API_KEY") and settings.SENDGRID_API_KEY:
@@ -72,6 +78,7 @@ class SendgridBackend(BaseEmailBackend):
                 + "You may also pass a value to the api_key argument (optional)."
             )
 
+        # Configure sandbox mode based on settings
         sandbox_mode_in_debug = get_django_setting(
             "SENDGRID_SANDBOX_MODE_IN_DEBUG", True
         )
@@ -82,21 +89,29 @@ class SendgridBackend(BaseEmailBackend):
                 "Sendgrid email backend is in sandbox mode!  Emails will not be delivered."
             )
 
+        # Configure open & click tracking settings, which apply to all emails
+        # sent from this backend.
         self.track_email = get_django_setting("SENDGRID_TRACK_EMAIL_OPENS", True)
         self.track_clicks_html = get_django_setting("SENDGRID_TRACK_CLICKS_HTML", True)
         self.track_clicks_plain = get_django_setting(
             "SENDGRID_TRACK_CLICKS_PLAIN", True
         )
 
+        # Configure echoing sent email messages to stdout (or another stream)
+        # for debugging purposes.
+        self._lock = None  # type: Optional[threading._RLock]
+        self.stream = None  # type: Optional[io.TextIOBase]
+
         if get_django_setting("SENDGRID_ECHO_TO_STDOUT"):
             self._lock = threading.RLock()
             self.stream = kwargs.pop("stream", sys.stdout)
-        else:
-            self._lock = None
-            self.stream = None
 
-    def write_to_stream(self, message: EmailMessage) -> None:
-        assert self.stream is not None
+    @staticmethod
+    def _write_to_stream(stream: io.TextIOBase, message: EmailMessage) -> None:
+        """
+        Internal method used to serialize an email in plaintext to a stream
+        """
+        assert stream is not None
 
         msg = message.message()
         msg_data = msg.as_bytes()
@@ -104,9 +119,9 @@ class SendgridBackend(BaseEmailBackend):
             msg.get_charset().get_output_charset() if msg.get_charset() else "utf-8"
         )
         msg_data = msg_data.decode(charset)
-        self.stream.write("%s\n" % msg_data)
-        self.stream.write("-" * 79)
-        self.stream.write("\n")
+        stream.write("%s\n" % msg_data)
+        stream.write("-" * 79)
+        stream.write("\n")
 
     def echo_to_output_stream(self, email_messages: Iterable[EmailMessage]) -> None:
         """
@@ -121,7 +136,7 @@ class SendgridBackend(BaseEmailBackend):
             try:
                 stream_created = self.open()
                 for message in email_messages:
-                    self.write_to_stream(message)
+                    self._write_to_stream(self.stream, message)
                     self.stream.flush()  # flush after each message
                 if stream_created:
                     self.close()
@@ -133,6 +148,8 @@ class SendgridBackend(BaseEmailBackend):
         """
         Sends a list of EmailMessage objects via Sendgrid's HTTP API.
         Returns an integer representing the number of messages sent.
+
+        This implements django's BaseEmailBackend.send_messages method
         """
         if self.stream:
             self.echo_to_output_stream(email_messages)
