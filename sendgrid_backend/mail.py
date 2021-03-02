@@ -1,42 +1,50 @@
-import logging
-
-from future.builtins import str
 import base64
-from email.mime.base import MIMEBase
 import email.utils
+import io
+import logging
 import mimetypes
 import sys
 import threading
 import uuid
 import warnings
+from email.mime.base import MIMEBase
+from typing import TYPE_CHECKING, Dict, Iterable, Optional, Tuple, Union
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.core.mail.backends.base import BaseEmailBackend
-
-import sendgrid
+from python_http_client.exceptions import HTTPError
+from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import (
-    Attachment, Category, Content, Email, Header, Mail, MailSettings, OpenTracking,
-    Personalization, SandBoxMode, Substitution, TrackingSettings, CustomArg, ClickTracking
+    Attachment,
+    Category,
+    ClickTracking,
+    Content,
+    CustomArg,
+    Email,
+    Header,
+    Mail,
+    MailSettings,
+    OpenTracking,
+    Personalization,
+    SandBoxMode,
+    Substitution,
+    TrackingSettings,
 )
 
-from python_http_client.exceptions import HTTPError
-
 from sendgrid_backend.signals import sendgrid_email_sent
+from sendgrid_backend.util import SENDGRID_5, SENDGRID_6, get_django_setting
 
-SENDGRID_VERSION = sendgrid.__version__
+DjangoAttachment = Union[Tuple[str, Union[bytes, str], str], MIMEBase]
 
 # Need to change imports because of breaking changes in sendgrid's v6 api
 # https://github.com/sendgrid/sendgrid-python/releases/tag/v6.0.0
-if SENDGRID_VERSION < '6':
+if SENDGRID_5:
     from sendgrid.helpers.mail import ASM
 else:
     from sendgrid.helpers.mail import Asm as ASM
     from sendgrid.helpers.mail import IpPoolName
-
-if sys.version_info >= (3.0, 0.0):
-    basestring = str
 
 logger = logging.getLogger(__name__)
 
@@ -49,67 +57,86 @@ class SendgridBackend(BaseEmailBackend):
     This class uses the api key set in the django setting, SENDGRID_API_KEY.  If you have not set this value (or wish
     to override it), this backend accepts an api_key argument that supersedes the django setting
     """
+
+    if TYPE_CHECKING:
+        fail_silently = False
+
     def __init__(self, *args, **kwargs):
         super(SendgridBackend, self).__init__(*args, **kwargs)
+
+        # Check for the API key either in the SENDGRID_API_KEY django setting,
+        # or passed as an argument to the init function, which takes precedence
+        # over the setting.
+
         if "api_key" in kwargs:
-            self.sg = sendgrid.SendGridAPIClient(api_key=kwargs["api_key"])
+            self.sg = SendGridAPIClient(api_key=kwargs["api_key"])
         elif hasattr(settings, "SENDGRID_API_KEY") and settings.SENDGRID_API_KEY:
-            self.sg = sendgrid.SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+            self.sg = SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
         else:
-            raise ImproperlyConfigured("settings.py must contain a value for SENDGRID_API_KEY.  " +
-                                       "You may also pass a value to the api_key argument (optional).")
+            raise ImproperlyConfigured(
+                "settings.py must contain a value for SENDGRID_API_KEY.  "
+                + "You may also pass a value to the api_key argument (optional)."
+            )
 
-        sandbox_mode_in_debug = True
-        if hasattr(settings, "SENDGRID_SANDBOX_MODE_IN_DEBUG"):
-            sandbox_mode_in_debug = settings.SENDGRID_SANDBOX_MODE_IN_DEBUG
-
+        # Configure sandbox mode based on settings
+        sandbox_mode_in_debug = get_django_setting(
+            "SENDGRID_SANDBOX_MODE_IN_DEBUG", True
+        )
         self.sandbox_mode = bool(settings.DEBUG) and bool(sandbox_mode_in_debug)
 
         if self.sandbox_mode:
-            warnings.warn("Sendgrid email backend is in sandbox mode!  Emails will not be delivered.")
+            warnings.warn(
+                "Sendgrid email backend is in sandbox mode!  Emails will not be delivered."
+            )
 
-        track_email = True
-        if hasattr(settings, "SENDGRID_TRACK_EMAIL_OPENS"):
-            track_email = settings.SENDGRID_TRACK_EMAIL_OPENS
-        self.track_email = track_email
+        # Configure open & click tracking settings, which apply to all emails
+        # sent from this backend.
+        self.track_email = get_django_setting("SENDGRID_TRACK_EMAIL_OPENS", True)
+        self.track_clicks_html = get_django_setting("SENDGRID_TRACK_CLICKS_HTML", True)
+        self.track_clicks_plain = get_django_setting(
+            "SENDGRID_TRACK_CLICKS_PLAIN", True
+        )
 
-        track_clicks_html = True
-        if hasattr(settings, "SENDGRID_TRACK_CLICKS_HTML"):
-            track_clicks_html = settings.SENDGRID_TRACK_CLICKS_HTML
+        # Configure echoing sent email messages to stdout (or another stream)
+        # for debugging purposes.
+        self._lock = None  # type: Optional[threading._RLock]
+        self.stream = None  # type: Optional[io.TextIOBase]
 
-        self.track_clicks_html = track_clicks_html
-
-        track_clicks_plain = True
-        if hasattr(settings, "SENDGRID_TRACK_CLICKS_PLAIN"):
-            track_clicks_plain = settings.SENDGRID_TRACK_CLICKS_PLAIN
-
-        self.track_clicks_plain = track_clicks_plain
-
-        if hasattr(settings, "SENDGRID_ECHO_TO_STDOUT") and settings.SENDGRID_ECHO_TO_STDOUT:
+        if get_django_setting("SENDGRID_ECHO_TO_STDOUT"):
             self._lock = threading.RLock()
-            self.stream = kwargs.pop('stream', sys.stdout)
-        else:
-            self._lock = None
-            self.stream = None
+            self.stream = kwargs.pop("stream", sys.stdout)
 
-    def write_to_stream(self, message):
+    @staticmethod
+    def _write_to_stream(stream: io.TextIOBase, message: EmailMessage) -> None:
+        """
+        Internal method used to serialize an email in plaintext to a stream
+        """
+        assert stream is not None
+
         msg = message.message()
         msg_data = msg.as_bytes()
-        charset = msg.get_charset().get_output_charset() if msg.get_charset() else 'utf-8'
+        charset = (
+            msg.get_charset().get_output_charset() if msg.get_charset() else "utf-8"
+        )
         msg_data = msg_data.decode(charset)
-        self.stream.write('%s\n' % msg_data)
-        self.stream.write('-' * 79)
-        self.stream.write('\n')
+        stream.write("%s\n" % msg_data)
+        stream.write("-" * 79)
+        stream.write("\n")
 
-    def echo_to_output_stream(self, email_messages):
-        """ Write all messages to the stream in a thread-safe way. """
+    def echo_to_output_stream(self, email_messages: Iterable[EmailMessage]) -> None:
+        """
+        Write all messages to the stream in a thread-safe way.
+        """
+        assert self._lock is not None
+        assert self.stream is not None
+
         if not email_messages:
             return
         with self._lock:
             try:
                 stream_created = self.open()
                 for message in email_messages:
-                    self.write_to_stream(message)
+                    self._write_to_stream(self.stream, message)
                     self.stream.flush()  # flush after each message
                 if stream_created:
                     self.close()
@@ -117,7 +144,13 @@ class SendgridBackend(BaseEmailBackend):
                 if not self.fail_silently:
                     raise
 
-    def send_messages(self, email_messages):
+    def send_messages(self, email_messages: Iterable[EmailMessage]) -> int:
+        """
+        Sends a list of EmailMessage objects via Sendgrid's HTTP API.
+        Returns an integer representing the number of messages sent.
+
+        This implements django's BaseEmailBackend.send_messages method
+        """
         if self.stream:
             self.echo_to_output_stream(email_messages)
         success = 0
@@ -127,24 +160,28 @@ class SendgridBackend(BaseEmailBackend):
             fail_flag = True
             try:
                 resp = self.sg.client.mail.send.post(request_body=data)
-                msg.extra_headers['status'] = resp.status_code
-                x_message_id = resp.headers.get('x-message-id', None)
+                msg.extra_headers["status"] = resp.status_code
+                x_message_id = resp.headers.get("x-message-id", None)
                 if x_message_id:
-                    msg.extra_headers['message_id'] = x_message_id
+                    msg.extra_headers["message_id"] = x_message_id
                 else:
-                    logger.warning('No x_message_id header received from sendgrid api')
+                    logger.warning("No x_message_id header received from sendgrid api")
                 success += 1
                 fail_flag = False
             except HTTPError as e:
                 message = getattr(e, "body", None)
-                logger.error("Failed to send email, error: %s, response body: %s" % (e, message))
+                logger.error(
+                    "Failed to send email, error: %s, response body: %s" % (e, message)
+                )
                 if not self.fail_silently:
                     raise
             finally:
-                sendgrid_email_sent.send(sender=self.__class__, message=msg, fail_flag=fail_flag)
+                sendgrid_email_sent.send(
+                    sender=self.__class__, message=msg, fail_flag=fail_flag
+                )
         return success
 
-    def _create_sg_attachment(self, django_attch):
+    def _create_sg_attachment(self, django_attch: DjangoAttachment) -> Attachment:
         """
         Handles the conversion between a django attachment object and a sendgrid attachment object.
         Due to differences between sendgrid's API versions, use this method when constructing attachments to ensure
@@ -152,12 +189,12 @@ class SendgridBackend(BaseEmailBackend):
         """
 
         def set_prop(attachment, prop_name, value):
-            if SENDGRID_VERSION < '6':
+            if SENDGRID_5:
                 setattr(attachment, prop_name, value)
             else:
                 if prop_name == "filename":
                     prop_name = "name"
-                setattr(attachment, 'file_{}'.format(prop_name), value)
+                setattr(attachment, "file_{}".format(prop_name), value)
 
         sg_attch = Attachment()
 
@@ -183,22 +220,32 @@ class SendgridBackend(BaseEmailBackend):
             filename, content, mimetype = django_attch
 
             set_prop(sg_attch, "filename", filename)
-            # Convert content from chars to bytes, in both Python 2 and 3.
+
             # todo: Read content if stream?
+
             if isinstance(content, str):
-                content = content.encode('utf-8')
+                content = content.encode()
+
             set_prop(sg_attch, "content", base64.b64encode(content).decode())
             set_prop(sg_attch, "type", mimetype)
 
         return sg_attch
 
-    def _parse_email_address(self, address):
-        name, addr = email.utils.parseaddr(address)
+    def _parse_email_address(self, address: str) -> Tuple[str, Optional[str]]:
+        """
+        Returns a tuple of (addr, name) from an address string
+        """
+        name, addr = email.utils.parseaddr(address)  # type: Optional[str], str
         if not name:
             name = None
         return addr, name
 
-    def _build_sg_mail(self, msg):
+    def _build_sg_mail(self, msg: EmailMessage) -> Dict:
+        """
+        Serializes a Django EmailMessage into its JSON representation.
+
+        Returns a Dict of mail data to be consumed by the sendgrid api.
+        """
         mail = Mail()
 
         mail.from_email = Email(*self._parse_email_address(msg.from_email))
@@ -213,14 +260,16 @@ class SendgridBackend(BaseEmailBackend):
         for addr in msg.bcc:
             personalization.add_bcc(Email(*self._parse_email_address(addr)))
 
-        if hasattr(msg, 'custom_args'):
+        if hasattr(msg, "custom_args"):
             for k, v in msg.custom_args.items():
                 personalization.add_custom_arg(CustomArg(k, v))
 
         if self._is_transaction_template(msg):
             if msg.subject:
-                logger.warning("Message subject is ignored in transactional template, "
-                               "please add it as template variable (e.g. {{ subject }}")
+                logger.warning(
+                    "Message subject is ignored in transactional template, "
+                    "please add it as template variable (e.g. {{ subject }}"
+                )
                 # See https://github.com/sendgrid/sendgrid-nodejs/issues/843
         else:
             personalization.subject = msg.subject
@@ -232,20 +281,22 @@ class SendgridBackend(BaseEmailBackend):
                 personalization.add_header(Header(k, v))
 
         if hasattr(msg, "ip_pool_name"):
-            if not isinstance(msg.ip_pool_name, basestring):
+            if not isinstance(msg.ip_pool_name, str):
                 raise ValueError(
-                    "ip_pool_name must be a basestring, got: {}; ".format(
-                        type(msg.ip_pool_name)))
+                    "ip_pool_name must be a str, got: {}; ".format(
+                        type(msg.ip_pool_name)
+                    )
+                )
 
             # Validate ip_pool_name length before attempting to add
             if not 2 <= len(msg.ip_pool_name) <= 64:
                 raise ValueError(
                     "the number of characters of ip_pool_name must be min 2 and max 64, got: {}; "
                     "see https://sendgrid.com/docs/API_Reference/Web_API_v3/Mail/"
-                    "index.html#-Request-Body-Parameters".format(
-                        len(msg.ip_pool_name)))
+                    "index.html#-Request-Body-Parameters".format(len(msg.ip_pool_name))
+                )
 
-            if SENDGRID_VERSION < "6":
+            if SENDGRID_5:
                 ip_pool_name = msg.ip_pool_name
             else:
                 ip_pool_name = IpPoolName(msg.ip_pool_name)
@@ -257,20 +308,29 @@ class SendgridBackend(BaseEmailBackend):
                 raise ValueError(
                     "send_at must be an integer, got: {}; "
                     "see https://sendgrid.com/docs/API_Reference/SMTP_API/scheduling_parameters.html#-Send-At".format(
-                        type(msg.send_at)))
+                        type(msg.send_at)
+                    )
+                )
             personalization.send_at = msg.send_at
 
         if hasattr(msg, "reply_to") and msg.reply_to:
             if mail.reply_to:
                 # If this code path is triggered, the reply_to on the sg mail was set in a header above
-                reply_to = Email(*self._parse_email_address(msg.reply_to))
-                if reply_to.email != mail.reply_to.email or reply_to.name != mail.reply_to.name:
-                    raise ValueError("Sendgrid only allows 1 email in the reply-to field.  " +
-                                     "Reply-To header value != reply_to property value.")
+                reply_to = Email(*self._parse_email_address(msg.reply_to[0]))
+                if (
+                    reply_to.email != mail.reply_to.email
+                    or reply_to.name != mail.reply_to.name
+                ):
+                    raise ValueError(
+                        "Sendgrid only allows 1 email in the reply-to field.  "
+                        + "Reply-To header value != reply_to property value."
+                    )
 
-            if not isinstance(msg.reply_to, basestring):
+            if not isinstance(msg.reply_to, str):
                 if len(msg.reply_to) > 1:
-                    raise ValueError("Sendgrid only allows 1 email in the reply-to field")
+                    raise ValueError(
+                        "Sendgrid only allows 1 email in the reply-to field"
+                    )
                 mail.reply_to = Email(*self._parse_email_address(msg.reply_to[0]))
             else:
                 mail.reply_to = Email(*self._parse_email_address(msg.reply_to))
@@ -283,7 +343,7 @@ class SendgridBackend(BaseEmailBackend):
             if msg.body:
                 logger.warning("Message body is ignored in transactional template")
         else:
-            msg.body = ' ' if msg.body == '' else msg.body
+            msg.body = " " if msg.body == "" else msg.body
 
         if hasattr(msg, "template_id"):
             # Template mails should not have subject and content attributes
@@ -292,8 +352,10 @@ class SendgridBackend(BaseEmailBackend):
                 for k, v in msg.substitutions.items():
                     personalization.add_substitution(Substitution(k, v))
             if hasattr(msg, "dynamic_template_data"):
-                if SENDGRID_VERSION < "6":
-                    logger.warning("dynamic_template_data not available in sendgrid version < 6")
+                if SENDGRID_5:
+                    logger.warning(
+                        "dynamic_template_data not available in sendgrid version < 6"
+                    )
                 personalization.dynamic_template_data = msg.dynamic_template_data
 
         if not self._is_transaction_template(msg):
@@ -332,11 +394,13 @@ class SendgridBackend(BaseEmailBackend):
 
         tracking_settings = TrackingSettings()
         tracking_settings.open_tracking = OpenTracking(self.track_email)
-        tracking_settings.click_tracking = ClickTracking(self.track_clicks_html, self.track_clicks_plain)
+        tracking_settings.click_tracking = ClickTracking(
+            self.track_clicks_html, self.track_clicks_plain
+        )
 
         mail.tracking_settings = tracking_settings
 
         return mail.get()
 
-    def _is_transaction_template(self, msg):
-        return SENDGRID_VERSION >= "6" and hasattr(msg, "template_id")
+    def _is_transaction_template(self, msg: EmailMessage) -> bool:
+        return SENDGRID_6 and hasattr(msg, "template_id")

@@ -1,15 +1,11 @@
 import os
 import sys
-if sys.version_info >= (3.0, 0.0):
-    from unittest.mock import MagicMock
-else:
-    from mock import MagicMock
 import warnings
+from unittest.mock import MagicMock
 
 from django.core.mail import EmailMessage
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
-
 from python_http_client.exceptions import UnauthorizedError
 
 from sendgrid_backend.mail import SendgridBackend
@@ -36,9 +32,11 @@ class TestEchoToOutput(SimpleTestCase):
             try:
                 msg.send()
             except UnauthorizedError:
-                # Since TravisCI doesn't allow environment variables to be injected on PRs (for security),
+                # Since Github only runs live server tests on protected branches (for security),
                 # we will get an unauthorized error when attempting to hit the sendgrid api endpoint, even in
                 # sandbox mode.
-                warnings.warn("Sendgrid requests using sandbox mode still need valid credentials for the " +
-                              "request to succeed.")
+                warnings.warn(
+                    "Sendgrid requests using sandbox mode still need valid credentials for the "
+                    + "request to succeed."
+                )
             self.assertTrue(mocked_output_stream.write.called)

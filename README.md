@@ -1,7 +1,6 @@
 # django-sendgrid-v5
 
-[![Latest Release](https://img.shields.io/pypi/v/django-sendgrid-v5.svg)](https://pypi.python.org/pypi/django-sendgrid-v5/) [![Travis Build Status](https://travis-ci.org/sklarsa/django-sendgrid-v5.svg)](https://travis-ci.org/sklarsa/django-sendgrid-v5)
-[![codecov](https://codecov.io/gh/sklarsa/django-sendgrid-v5/branch/master/graph/badge.svg)](https://codecov.io/gh/sklarsa/django-sendgrid-v5)
+[![Latest Release](https://img.shields.io/pypi/v/django-sendgrid-v5.svg)](https://pypi.python.org/pypi/django-sendgrid-v5/)
 
 This package implements an email backend for Django that relies on sendgrid's REST API for message delivery.
 
@@ -60,7 +59,54 @@ msg.dynamic_template_data = {
 msg.send(fail_silently=False)
 ```
 
-For more usage examples, see the [tests](test/test_mail.py).
+### The kitchen sink EmailMessage (all of the supported sendgrid-specific properties)
+
+```python
+from django.core.mail import EmailMessage
+
+msg = EmailMessage(
+  from_email='to@example.com',
+  to=['to@example.com'],
+  cc=['cc@example.com'],
+  bcc=['bcc@example.com'],
+)
+
+# Personalization custom args
+# https://sendgrid.com/docs/for-developers/sending-email/personalizations/
+msg.custom_args = {'arg1': 'value1', 'arg2': 'value2'}
+
+# Reply to email address (sendgrid only supports 1 reply-to email address)
+msg.reply_to = 'reply-to@example.com'
+
+# Send at (accepts an integer per the sendgrid docs)
+# https://sendgrid.com/docs/API_Reference/SMTP_API/scheduling_parameters.html#-Send-At
+msg.send_at = 1600188812
+
+# Transactional templates
+# https://sendgrid.com/docs/ui/sending-email/how-to-send-an-email-with-dynamic-transactional-templates/
+msg.template_id = "your-dynamic-template-id"
+msg.dynamic_template_data = {  # Sendgrid v6+ only
+  "title": foo
+}
+msg.substitutions = {
+  "title": bar
+}
+
+# Unsubscribe groups
+# https://sendgrid.com/docs/ui/sending-email/unsubscribe-groups/
+msg.asm = {'group_id': 123, 'groups_to_display': ['group1', 'group2']}
+
+# Categories
+# https://sendgrid.com/docs/glossary/categories/
+msg.categories = ['category1', 'category2']
+
+# IP Pools
+# https://sendgrid.com/docs/ui/account-and-settings/ip-pools/
+msg.ip_pool_name = 'my-ip-pool'
+
+
+msg.send(fail_silently=False)
+```
 
 ## Examples
 
