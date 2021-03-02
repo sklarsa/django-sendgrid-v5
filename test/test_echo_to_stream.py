@@ -32,7 +32,7 @@ class TestEchoToOutput(SimpleTestCase):
             try:
                 msg.send()
             except UnauthorizedError:
-                # Since TravisCI doesn't allow environment variables to be injected on PRs (for security),
+                # Since Github only runs live server tests on protected branches (for security),
                 # we will get an unauthorized error when attempting to hit the sendgrid api endpoint, even in
                 # sandbox mode.
                 warnings.warn(
