@@ -26,7 +26,6 @@ jobs:
       run: mypy sendgrid_backend/
 
   test:
-    environment: 'Live API Test'
     runs-on: ubuntu-latest
     strategy:
       matrix:
