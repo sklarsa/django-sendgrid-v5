@@ -1,9 +1,7 @@
 name: Python package
 
 on:
-  push:
-    tags-ignore:
-      - '**'
+  - push
   - pull_request
 
 jobs:
