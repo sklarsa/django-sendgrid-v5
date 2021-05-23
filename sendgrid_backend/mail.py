@@ -207,6 +207,11 @@ class SendgridBackend(BaseEmailBackend):
             # todo: Read content if stream?
             set_prop(sg_attch, "content", django_attch.get_payload().replace("\n", ""))
             set_prop(sg_attch, "type", django_attch.get_content_type())
+
+            method = getattr(sg_attch, "method", "")
+            if method:
+                set_prop(sg_attch, "content", f"{sg_attch.content}; method={method};")
+
             content_id = django_attch.get("Content-ID")
             if content_id:
                 # Strip brackets since sendgrid's api adds them
