@@ -247,6 +247,24 @@ class SendgridBackend(BaseEmailBackend):
         extra_headers: Iterable[Header],
         personalizations: Dict = None,
     ) -> Personalization:
+        """
+        Constructs as Sendgrid Personalization instance / row for the given recipients. 
+
+        If no "per row" personalizations are provided, the personalization data is populated
+        from msg. 
+
+        Args:
+            to: The email addresses for the given personalization.
+            msg: The base Django Email message object - used to fill (missing) personalization data
+            extra_headers: The non "reply-to" headers for the personalization.
+            personalizations: Personalization data, eg. dynamic_template_data or substitutions. 
+                A given value should have key equivalent to corresponding msg attr
+
+
+        Returns:
+            A sendgrid personalization instance
+            
+        """
 
         personalizations = personalizations or {}
         personalization = Personalization()
@@ -290,14 +308,15 @@ class SendgridBackend(BaseEmailBackend):
         if hasattr(msg, "template_id"):
             for k, v in personalizations.get("substitutions", getattr(msg, "substitutions", {})).items():
                 personalization.add_substitution(Substitution(k, v))
-            if hasattr(msg, "dynamic_template_data"):
+
+            dtd = personalizations.get("dynamic_template_data", getattr(msg, "dynamic_template_data", None))
+            if dtd:
                 if SENDGRID_5:
                     logger.warning(
                         "dynamic_template_data not available in sendgrid version < 6"
                     )
-                personalization.dynamic_template_data = (
-                    personalizations.get("dynamic_template_data") or msg.dynamic_template_data
-                )
+                else:
+                    personalization.dynamic_template_data = dtd
 
         return personalization
 
