@@ -248,7 +248,7 @@ class SendgridBackend(BaseEmailBackend):
         personalizations: Dict = None,
     ) -> Personalization:
         """
-        Constructs as Sendgrid Personalization instance / row for the given recipients. 
+        Constructs a Sendgrid Personalization instance / row for the given recipients. 
 
         If no "per row" personalizations are provided, the personalization data is populated
         from msg. 
