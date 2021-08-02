@@ -242,7 +242,7 @@ class SendgridBackend(BaseEmailBackend):
 
     def _build_sg_personalization(
         self,
-        to: Iterable,
+        to: Iterable[str],
         msg: EmailMessage,
         extra_headers: Iterable[Header],
         personalizations: Dict = None,
