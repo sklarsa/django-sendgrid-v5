@@ -248,22 +248,21 @@ class SendgridBackend(BaseEmailBackend):
         personalizations: Dict = None,
     ) -> Personalization:
         """
-        Constructs a Sendgrid Personalization instance / row for the given recipients. 
+        Constructs a Sendgrid Personalization instance / row for the given recipients.
 
         If no "per row" personalizations are provided, the personalization data is populated
-        from msg. 
+        from msg.
 
         Args:
             to: The email addresses for the given personalization.
             msg: The base Django Email message object - used to fill (missing) personalization data
             extra_headers: The non "reply-to" headers for the personalization.
-            personalizations: Personalization data, eg. dynamic_template_data or substitutions. 
+            personalizations: Personalization data, eg. dynamic_template_data or substitutions.
                 A given value should have key equivalent to corresponding msg attr
 
 
         Returns:
             A sendgrid personalization instance
-            
         """
 
         personalizations = personalizations or {}
@@ -293,7 +292,7 @@ class SendgridBackend(BaseEmailBackend):
 
         for header in extra_headers:
             personalization.add_header(header)
-            
+
         # write through the send_at attribute
         if hasattr(msg, "send_at"):
             if not isinstance(msg.send_at, int):
@@ -319,8 +318,6 @@ class SendgridBackend(BaseEmailBackend):
                     personalization.dynamic_template_data = dtd
 
         return personalization
-
-
 
     def _build_sg_mail(self, msg: EmailMessage) -> Dict:
         """
