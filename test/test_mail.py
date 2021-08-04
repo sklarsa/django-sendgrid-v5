@@ -9,6 +9,8 @@ from django.test.testcases import SimpleTestCase
 from sendgrid_backend.mail import SendgridBackend
 from sendgrid_backend.util import SENDGRID_5
 
+from sendgrid.helpers.mail import Email, Personalization
+
 
 class TestMailGeneration(SimpleTestCase):
 
@@ -500,11 +502,12 @@ class TestMailGeneration(SimpleTestCase):
 
         # Tests that personalizations take priority
         test_str = "from@personalizatio.ns"
-        msg.personalizations = [{
-            "cc": [test_str],
-            "bcc": [test_str],
-            "to": [test_str]
-        }]
+        personalization = Personalization()
+        personalization.add_to(Email(test_str))
+        personalization.add_cc(Email(test_str))
+        personalization.add_bcc(Email(test_str))
+
+        msg.personalizations = [personalization]
 
         result = self.backend._build_sg_mail(msg)
 
