@@ -240,6 +240,94 @@ class SendgridBackend(BaseEmailBackend):
             name = None
         return addr, name
 
+    def _build_sg_personalization(
+        self,
+        to: Iterable[str],
+        msg: EmailMessage,
+        extra_headers: Iterable[Header],
+        personalizations: Dict = None,
+    ) -> Personalization:
+        """
+        Constructs a Sendgrid Personalization instance / row for the given recipients.
+
+        If no "per row" personalizations are provided, the personalization data is populated
+        from msg.
+
+        Args:
+            to: The email addresses for the given personalization.
+            msg: The base Django Email message object - used to fill (missing) personalization data
+            extra_headers: The non "reply-to" headers for the personalization.
+            personalizations: Personalization data, eg. dynamic_template_data or substitutions.
+                A given value should have key equivalent to corresponding msg attr
+
+
+        Returns:
+            A sendgrid personalization instance
+        """
+
+        personalizations = personalizations or {}
+        personalization = Personalization()
+
+        for addr in msg.to:
+            personalization.add_to(Email(*self._parse_email_address(addr)))
+
+        for addr in personalizations.get("cc") or msg.cc:
+            personalization.add_cc(Email(*self._parse_email_address(addr)))
+
+        for addr in personalizations.get("bcc") or msg.bcc:
+            personalization.add_bcc(Email(*self._parse_email_address(addr)))
+
+        for k, v in personalizations.get(
+            "custom_args",
+            getattr(msg, "custom_args", {}),
+        ).items():
+            personalization.add_custom_arg(CustomArg(k, v))
+
+        if self._is_transaction_template(msg):
+            if msg.subject:
+                logger.warning(
+                    "Message subject is ignored in transactional template, "
+                    "please add it as template variable (e.g. {{ subject }}"
+                )
+                # See https://github.com/sendgrid/sendgrid-nodejs/issues/843
+        else:
+            personalization.subject = personalizations.get("subject") or msg.subject
+
+        for header in extra_headers:
+            personalization.add_header(header)
+
+        # write through the send_at attribute
+        if hasattr(msg, "send_at"):
+            if not isinstance(msg.send_at, int):
+                raise ValueError(
+                    "send_at must be an integer, got: {}; "
+                    "see https://sendgrid.com/docs/API_Reference/SMTP_API/scheduling_parameters.html#-Send-At".format(
+                        type(msg.send_at)
+                    )
+                )
+            personalization.send_at = msg.send_at
+
+        if hasattr(msg, "template_id"):
+            for k, v in personalizations.get(
+                "substitutions",
+                getattr(msg, "substitutions", {}),
+            ).items():
+                personalization.add_substitution(Substitution(k, v))
+
+            dtd = personalizations.get(
+                "dynamic_template_data",
+                getattr(msg, "dynamic_template_data", None),
+            )
+            if dtd:
+                if SENDGRID_5:
+                    logger.warning(
+                        "dynamic_template_data not available in sendgrid version < 6"
+                    )
+                else:
+                    personalization.dynamic_template_data = dtd
+
+        return personalization
+
     def _build_sg_mail(self, msg: EmailMessage) -> Dict:
         """
         Serializes a Django EmailMessage into its JSON representation.
@@ -250,35 +338,12 @@ class SendgridBackend(BaseEmailBackend):
 
         mail.from_email = Email(*self._parse_email_address(msg.from_email))
 
-        personalization = Personalization()
-        for addr in msg.to:
-            personalization.add_to(Email(*self._parse_email_address(addr)))
-
-        for addr in msg.cc:
-            personalization.add_cc(Email(*self._parse_email_address(addr)))
-
-        for addr in msg.bcc:
-            personalization.add_bcc(Email(*self._parse_email_address(addr)))
-
-        if hasattr(msg, "custom_args"):
-            for k, v in msg.custom_args.items():
-                personalization.add_custom_arg(CustomArg(k, v))
-
-        if self._is_transaction_template(msg):
-            if msg.subject:
-                logger.warning(
-                    "Message subject is ignored in transactional template, "
-                    "please add it as template variable (e.g. {{ subject }}"
-                )
-                # See https://github.com/sendgrid/sendgrid-nodejs/issues/843
-        else:
-            personalization.subject = msg.subject
-
+        personalization_headers = []
         for k, v in msg.extra_headers.items():
             if k.lower() == "reply-to":
                 mail.reply_to = Email(v)
             else:
-                personalization.add_header(Header(k, v))
+                personalization_headers.append(Header(k, v))
 
         if hasattr(msg, "ip_pool_name"):
             if not isinstance(msg.ip_pool_name, str):
@@ -301,17 +366,6 @@ class SendgridBackend(BaseEmailBackend):
             else:
                 ip_pool_name = IpPoolName(msg.ip_pool_name)
             mail.ip_pool_name = ip_pool_name
-
-        # write through the send_at attribute
-        if hasattr(msg, "send_at"):
-            if not isinstance(msg.send_at, int):
-                raise ValueError(
-                    "send_at must be an integer, got: {}; "
-                    "see https://sendgrid.com/docs/API_Reference/SMTP_API/scheduling_parameters.html#-Send-At".format(
-                        type(msg.send_at)
-                    )
-                )
-            personalization.send_at = msg.send_at
 
         if hasattr(msg, "reply_to") and msg.reply_to:
             if mail.reply_to:
@@ -348,15 +402,6 @@ class SendgridBackend(BaseEmailBackend):
         if hasattr(msg, "template_id"):
             # Template mails should not have subject and content attributes
             mail.template_id = msg.template_id
-            if hasattr(msg, "substitutions"):
-                for k, v in msg.substitutions.items():
-                    personalization.add_substitution(Substitution(k, v))
-            if hasattr(msg, "dynamic_template_data"):
-                if SENDGRID_5:
-                    logger.warning(
-                        "dynamic_template_data not available in sendgrid version < 6"
-                    )
-                personalization.dynamic_template_data = msg.dynamic_template_data
 
         if not self._is_transaction_template(msg):
             # In sendgrid v6 we should not specify subject and content between request parameter
@@ -373,7 +418,34 @@ class SendgridBackend(BaseEmailBackend):
             else:
                 mail.add_content(Content("text/plain", msg.body))
 
-        mail.add_personalization(personalization)
+        if hasattr(msg, "personalizations"):
+            for personalization in msg.personalizations:
+                to = personalization.pop("to")
+                mail.add_personalization(
+                    self._build_sg_personalization(
+                        to,
+                        msg,
+                        personalization_headers,
+                        personalizations=personalization,
+                    )
+                )
+        elif getattr(msg, "make_private", False):
+            for to in msg.to:
+                mail.add_personalization(
+                    self._build_sg_personalization(
+                        [to],
+                        msg,
+                        personalization_headers,
+                    )
+                )
+        else:
+            mail.add_personalization(
+                self._build_sg_personalization(
+                    msg.to,
+                    msg,
+                    personalization_headers,
+                )
+            )
 
         if hasattr(msg, "categories"):
             for cat in msg.categories:
