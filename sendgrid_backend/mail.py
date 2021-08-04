@@ -277,7 +277,9 @@ class SendgridBackend(BaseEmailBackend):
         for addr in personalizations.get("bcc") or msg.bcc:
             personalization.add_bcc(Email(*self._parse_email_address(addr)))
 
-        for k, v in personalizations.get("custom_args", getattr(msg, "custom_args", {})).items():
+        for k, v in personalizations.get(
+            "custom_args", getattr(msg, "custom_args", {})
+        ).items():
             personalization.add_custom_arg(CustomArg(k, v))
 
         if self._is_transaction_template(msg):
@@ -305,10 +307,14 @@ class SendgridBackend(BaseEmailBackend):
             personalization.send_at = msg.send_at
 
         if hasattr(msg, "template_id"):
-            for k, v in personalizations.get("substitutions", getattr(msg, "substitutions", {})).items():
+            for k, v in personalizations.get(
+                "substitutions", getattr(msg, "substitutions", {})
+            ).items():
                 personalization.add_substitution(Substitution(k, v))
 
-            dtd = personalizations.get("dynamic_template_data", getattr(msg, "dynamic_template_data", None))
+            dtd = personalizations.get(
+                "dynamic_template_data", getattr(msg, "dynamic_template_data", None)
+            )
             if dtd:
                 if SENDGRID_5:
                     logger.warning(
