@@ -480,12 +480,36 @@ class TestMailGeneration(SimpleTestCase):
 
         self.assertDictEqual(result, expected)
 
-    """
-    todo: Implement these
-    def test_attachments(self):
-        pass
+    def test_personalizations_resolution(self):
+        """
+        Tests that adding a Personalization() object directly to an EmailMessage object
+        works as expected.
 
-    def test_headers(self):
-        pass
+        Written to test functionality introduced in the PR:
+        https://github.com/sklarsa/django-sendgrid-v5/pull/90
+        """
+        msg = EmailMessage(
+            subject="Hello, World!",
+            body="Hello, World!",
+            from_email="Sam Smith <sam.smith@example.com>",
+            to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
+            cc=["Stephanie Smith <stephanie.smith@example.com>"],
+            bcc=["Sarah Smith <sarah.smith@example.com>"],
+            reply_to=["Sam Smith <sam.smith@example.com>"],
+        )
 
-    """
+        # Tests that personalizations take priority
+        test_str = "from@personalizatio.ns"
+        msg.personalizations = [{
+            "cc": [test_str],
+            "bcc": [test_str],
+            "to": [test_str]
+        }]
+
+        result = self.backend._build_sg_mail(msg)
+
+        personalization = result["personalizations"][0]
+
+        for field in ("to", "cc", "bcc"):
+            self.assertEquals(len(personalization[field]), 1)
+            self.assertEquals(personalization[field][0]["email"], test_str)
