@@ -242,10 +242,10 @@ class SendgridBackend(BaseEmailBackend):
 
     def _build_sg_personalization(
         self,
-        to: Iterable[str],
+        to: Iterable[Union[str, Dict[str, str]]],
         msg: EmailMessage,
         extra_headers: Iterable[Header],
-        personalizations: Dict = None,
+        existing_personalizations: Personalization = None,
     ) -> Personalization:
         """
         Constructs a Sendgrid Personalization instance / row for the given recipients.
@@ -265,33 +265,36 @@ class SendgridBackend(BaseEmailBackend):
             A sendgrid personalization instance
         """
 
-        personalizations = personalizations or {}
-        personalization = Personalization()
+        personalization = existing_personalizations or Personalization()
 
-        for addr in msg.to:
-            personalization.add_to(Email(*self._parse_email_address(addr)))
+        if to:
+            if type(to[0]) == str:
+                for addr in to:
+                    personalization.add_to(Email(*self._parse_email_address(addr)))
+            else:
+                personalization.tos = to
 
-        for addr in personalizations.get("cc") or msg.cc:
-            personalization.add_cc(Email(*self._parse_email_address(addr)))
+        if not personalization.ccs:
+            for addr in msg.cc:
+                personalization.add_cc(Email(*self._parse_email_address(addr)))
 
-        for addr in personalizations.get("bcc") or msg.bcc:
-            personalization.add_bcc(Email(*self._parse_email_address(addr)))
+        if not personalization.bccs:
+            for addr in msg.bcc:
+                personalization.add_bcc(Email(*self._parse_email_address(addr)))
 
-        for k, v in personalizations.get(
-            "custom_args",
-            getattr(msg, "custom_args", {}),
-        ).items():
-            personalization.add_custom_arg(CustomArg(k, v))
+        if not personalization.custom_args:
+            for k, v in getattr(msg, "custom_args", {}).items():
+                personalization.add_custom_arg(CustomArg(k, v))
 
         if self._is_transaction_template(msg):
-            if msg.subject:
+            if personalization.subject or msg.subject:
                 logger.warning(
                     "Message subject is ignored in transactional template, "
                     "please add it as template variable (e.g. {{ subject }}"
                 )
                 # See https://github.com/sendgrid/sendgrid-nodejs/issues/843
-        else:
-            personalization.subject = personalizations.get("subject") or msg.subject
+        if not personalization.subject:
+            personalization.subject = msg.subject
 
         for header in extra_headers:
             personalization.add_header(header)
@@ -308,15 +311,12 @@ class SendgridBackend(BaseEmailBackend):
             personalization.send_at = msg.send_at
 
         if hasattr(msg, "template_id"):
-            for k, v in personalizations.get(
-                "substitutions",
-                getattr(msg, "substitutions", {}),
-            ).items():
-                personalization.add_substitution(Substitution(k, v))
+            if not personalization.substitutions:
+                for k, v in getattr(msg, "substitutions", {}).items():
+                    personalization.add_substitution(Substitution(k, v))
 
-            dtd = personalizations.get(
-                "dynamic_template_data",
-                getattr(msg, "dynamic_template_data", None),
+            dtd = personalization.dynamic_template_data or getattr(
+                msg, "dynamic_template_data", None
             )
             if dtd:
                 if SENDGRID_5:
@@ -420,13 +420,14 @@ class SendgridBackend(BaseEmailBackend):
 
         if hasattr(msg, "personalizations"):
             for personalization in msg.personalizations:
-                to = personalization.pop("to")
+                assert type(personalization) == Personalization
+
                 mail.add_personalization(
                     self._build_sg_personalization(
-                        to,
+                        personalization.tos or msg.to,
                         msg,
                         personalization_headers,
-                        personalizations=personalization,
+                        existing_personalizations=personalization,
                     )
                 )
         elif getattr(msg, "make_private", False):
