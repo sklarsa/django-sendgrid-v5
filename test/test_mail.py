@@ -1,14 +1,16 @@
 import base64
-import sys
 from email.mime.image import MIMEImage
 
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
-from sendgrid.helpers.mail import Email, Personalization, To
+from sendgrid.helpers.mail import Email, Personalization
 
 from sendgrid_backend.mail import SendgridBackend
-from sendgrid_backend.util import SENDGRID_5
+from sendgrid_backend.util import SENDGRID_5, SENDGRID_6
+
+if SENDGRID_6:
+    from sendgrid.helpers.mail import Bcc, Cc, To
 
 
 class TestMailGeneration(SimpleTestCase):
@@ -502,9 +504,15 @@ class TestMailGeneration(SimpleTestCase):
         # Tests that personalizations take priority
         test_str = "admin@my-test-domain.com"
         personalization = Personalization()
-        personalization.add_to(To(test_str))
-        personalization.add_cc(To(test_str))
-        personalization.add_bcc(To(test_str))
+
+        if SENDGRID_5:
+            personalization.add_to(Email(test_str))
+            personalization.add_cc(Email(test_str))
+            personalization.add_bcc(Email(test_str))
+        else:
+            personalization.add_to(To(test_str))
+            personalization.add_cc(Cc(test_str))
+            personalization.add_bcc(Bcc(test_str))
 
         msg.personalizations = [personalization]
 
