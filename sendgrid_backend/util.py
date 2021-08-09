@@ -1,7 +1,7 @@
+from typing import Any, Dict
+
 import sendgrid
 from django.conf import settings
-from typing import Dict
-
 from sendgrid.helpers.mail import Personalization
 
 SENDGRID_VERSION = sendgrid.__version__
@@ -18,14 +18,19 @@ def get_django_setting(setting_str, default=None):
         return getattr(settings, setting_str, default)
     return default
 
-def dict_to_personalization(data: Dict) -> Personalization:
+
+def dict_to_personalization(data: Dict[Any, Any]) -> Personalization:
     """
     Reverses Sendgrid's Personalization.get() method to create a Personalization
     object from its emitted data structure (in the form of a Dict)
     """
     personalization = Personalization()
 
-    properties = [p for p in dir(Personalization) if isinstance(getattr(Personalization,p),property)]
+    properties = [
+        p
+        for p in dir(Personalization)
+        if isinstance(getattr(Personalization, p), property)
+    ]
     for key in properties:
         value = data.get(key, None)
         if value:

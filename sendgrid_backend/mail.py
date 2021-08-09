@@ -8,7 +8,7 @@ import threading
 import uuid
 import warnings
 from email.mime.base import MIMEBase
-from typing import TYPE_CHECKING, Dict, Iterable, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -34,7 +34,12 @@ from sendgrid.helpers.mail import (
 )
 
 from sendgrid_backend.signals import sendgrid_email_sent
-from sendgrid_backend.util import SENDGRID_5, SENDGRID_6, get_django_setting, dict_to_personalization
+from sendgrid_backend.util import (
+    SENDGRID_5,
+    SENDGRID_6,
+    dict_to_personalization,
+    get_django_setting,
+)
 
 DjangoAttachment = Union[Tuple[str, Union[bytes, str], str], MIMEBase]
 
@@ -242,10 +247,10 @@ class SendgridBackend(BaseEmailBackend):
 
     def _build_sg_personalization(
         self,
-        to: Iterable[Union[str, Dict[str, str]]],
+        to: List[Any],
         msg: EmailMessage,
         extra_headers: Iterable[Header],
-        existing_personalizations: Union[Personalization, Dict] = None,
+        existing_personalizations: Optional[Personalization] = None,
     ) -> Personalization:
         """
         Constructs a Sendgrid Personalization instance / row for the given recipients.
@@ -264,9 +269,6 @@ class SendgridBackend(BaseEmailBackend):
         Returns:
             A sendgrid personalization instance
         """
-        if type(existing_personalizations) == Dict:
-            existing_personalizations = dict_to_personalization(existing_personalizations)
-
         personalization = existing_personalizations or Personalization()
 
         if to:
@@ -423,6 +425,9 @@ class SendgridBackend(BaseEmailBackend):
 
         if hasattr(msg, "personalizations"):
             for personalization in msg.personalizations:
+                if type(personalization) == Dict:
+                    personalization = dict_to_personalization(personalization)
+
                 assert type(personalization) == Personalization
 
                 mail.add_personalization(
