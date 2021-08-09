@@ -34,7 +34,7 @@ from sendgrid.helpers.mail import (
 )
 
 from sendgrid_backend.signals import sendgrid_email_sent
-from sendgrid_backend.util import SENDGRID_5, SENDGRID_6, get_django_setting
+from sendgrid_backend.util import SENDGRID_5, SENDGRID_6, get_django_setting, dict_to_personalization
 
 DjangoAttachment = Union[Tuple[str, Union[bytes, str], str], MIMEBase]
 
@@ -245,7 +245,7 @@ class SendgridBackend(BaseEmailBackend):
         to: Iterable[Union[str, Dict[str, str]]],
         msg: EmailMessage,
         extra_headers: Iterable[Header],
-        existing_personalizations: Personalization = None,
+        existing_personalizations: Union[Personalization, Dict] = None,
     ) -> Personalization:
         """
         Constructs a Sendgrid Personalization instance / row for the given recipients.
@@ -257,13 +257,15 @@ class SendgridBackend(BaseEmailBackend):
             to: The email addresses for the given personalization.
             msg: The base Django Email message object - used to fill (missing) personalization data
             extra_headers: The non "reply-to" headers for the personalization.
-            personalizations: Personalization data, eg. dynamic_template_data or substitutions.
+            existing_personalizations: Personalization data, eg. dynamic_template_data or substitutions.
                 A given value should have key equivalent to corresponding msg attr
 
 
         Returns:
             A sendgrid personalization instance
         """
+        if type(existing_personalizations) == Dict:
+            existing_personalizations = dict_to_personalization(existing_personalizations)
 
         personalization = existing_personalizations or Personalization()
 
@@ -293,6 +295,7 @@ class SendgridBackend(BaseEmailBackend):
                     "please add it as template variable (e.g. {{ subject }}"
                 )
                 # See https://github.com/sendgrid/sendgrid-nodejs/issues/843
+
         if not personalization.subject:
             personalization.subject = msg.subject
 
