@@ -4,10 +4,16 @@ from email.mime.image import MIMEImage
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
-from sendgrid.helpers.mail import Email, Personalization
+from sendgrid.helpers.mail import (
+    CustomArg,
+    Email,
+    Header,
+    Personalization,
+    Substitution,
+)
 
 from sendgrid_backend.mail import SendgridBackend
-from sendgrid_backend.util import SENDGRID_5, SENDGRID_6
+from sendgrid_backend.util import SENDGRID_5, SENDGRID_6, dict_to_personalization
 
 if SENDGRID_6:
     from sendgrid.helpers.mail import Bcc, Cc, To
@@ -503,6 +509,8 @@ class TestMailGeneration(SimpleTestCase):
 
         # Tests that personalizations take priority
         test_str = "admin@my-test-domain.com"
+        test_key_str = "my key"
+        test_val_str = "my val"
         personalization = Personalization()
 
         if SENDGRID_5:
@@ -514,6 +522,10 @@ class TestMailGeneration(SimpleTestCase):
             personalization.add_cc(Cc(test_str))
             personalization.add_bcc(Bcc(test_str))
 
+        personalization.add_custom_arg(CustomArg(test_key_str, test_val_str))
+        personalization.add_header(Header(test_key_str, test_val_str))
+        personalization.add_substitution(Substitution(test_key_str, test_val_str))
+
         msg.personalizations = [personalization]
 
         result = self.backend._build_sg_mail(msg)
@@ -521,5 +533,65 @@ class TestMailGeneration(SimpleTestCase):
         personalization = result["personalizations"][0]
 
         for field in ("to", "cc", "bcc"):
-            self.assertEquals(len(personalization[field]), 1)
-            self.assertEquals(personalization[field][0]["email"], test_str)
+            data = personalization[field]
+            self.assertEquals(len(data), 1)
+            self.assertEquals(data[0]["email"], test_str)
+
+        for field in ("custom_args", "headers", "substitutions"):
+            data = personalization[field]
+            self.assertEquals(len(data), 1)
+            self.assertIn(test_key_str, data)
+            self.assertEquals(test_val_str, data[test_key_str])
+
+    def test_dict_to_personalization(self):
+        """
+        Tests that dict_to_personalization works
+        """
+        data = {
+            "to": [
+                {"email": "john.doe@example.com", "name": "John Doe"},
+                {
+                    "email": "jane.doe@example.com",
+                },
+            ],
+            "cc": [
+                {
+                    "email": "stephanie.smith@example.com",
+                    "name": "Stephanie Smith",
+                }
+            ],
+            "bcc": [{"email": "sarah.smith@example.com", "name": "Sarah Smith"}],
+            "subject": "Hello, World!",
+            "custom_args": {"arg_1": "Foo", "arg_2": "bar"},
+            "headers": {"header_1": "Foo", "header_2": "Bar"},
+            "substitutions": {"sub_a": "foo", "sub_b": "bar"},
+            "send_at": 1518108670,
+            "dynamic_template_data": {
+                "subject": "Hello, World!",
+                "content": "Hello, World!",
+                "link": "http://hello.com",
+            },
+        }
+
+        p = dict_to_personalization(data)
+
+        fields_to_test = (
+            ("tos", "to"),
+            ("ccs", "cc"),
+            ("bccs", "bcc"),
+            ("subject", "subject"),
+            ("custom_args", "custom_args"),
+            ("headers", "headers"),
+            ("substitutions", "substitutions"),
+            ("send_at", "send_at"),
+            ("dynamic_template_data", "dynamic_template_data"),
+        )
+
+        for arg, key in fields_to_test:
+            val = getattr(p, arg)
+            if type(val) == list:
+                self.assertListEqual(val, data[key])
+            elif type(val) == dict:
+                self.assertDictEqual(val, data[key])
+            else:
+                self.assertEquals(val, data[key])

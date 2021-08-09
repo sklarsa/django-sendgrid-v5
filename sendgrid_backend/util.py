@@ -31,8 +31,16 @@ def dict_to_personalization(data: Dict[Any, Any]) -> Personalization:
         for p in dir(Personalization)
         if isinstance(getattr(Personalization, p), property)
     ]
-    for key in properties:
+    for attr in properties:
+        if attr in ['tos', 'ccs', 'bccs']:
+            key = attr[:-1]
+        else:
+            key = attr
+
         value = data.get(key, None)
+
         if value:
-            setattr(personalization, key, value)
-            getattr(personalization, key)
+            setattr(personalization, attr, value)
+            getattr(personalization, attr)
+
+    return personalization
