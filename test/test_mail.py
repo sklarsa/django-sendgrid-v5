@@ -5,11 +5,10 @@ from email.mime.image import MIMEImage
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
+from sendgrid.helpers.mail import Email, Personalization, To
 
 from sendgrid_backend.mail import SendgridBackend
 from sendgrid_backend.util import SENDGRID_5
-
-from sendgrid.helpers.mail import Email, Personalization, To
 
 
 class TestMailGeneration(SimpleTestCase):
