@@ -273,7 +273,7 @@ class SendgridBackend(BaseEmailBackend):
         if existing_personalizations is None:
             if not to:
                 raise ValueError(
-                    "Either msg.to or msg.personalizations (with to) is must be set"
+                    "Either msg.to or msg.personalizations (with recipients) must be set"
                 )
 
             personalization = Personalization()
