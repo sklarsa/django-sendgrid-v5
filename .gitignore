@@ -1,3 +1,6 @@
+.env
+.venv
+env
 venv
 .DS_Store
 *.sublime-*

@@ -8,7 +8,7 @@ import threading
 import uuid
 import warnings
 from email.mime.base import MIMEBase
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -247,9 +247,9 @@ class SendgridBackend(BaseEmailBackend):
 
     def _build_sg_personalization(
         self,
-        to: List[Any],
         msg: EmailMessage,
         extra_headers: Iterable[Header],
+        to: Optional[List[str]] = None,
         existing_personalizations: Optional[Personalization] = None,
     ) -> Personalization:
         """
@@ -259,24 +259,31 @@ class SendgridBackend(BaseEmailBackend):
         from msg.
 
         Args:
-            to: The email addresses for the given personalization.
             msg: The base Django Email message object - used to fill (missing) personalization data
             extra_headers: The non "reply-to" headers for the personalization.
+            to: The email addresses for the given personalization.
             existing_personalizations: Personalization data, eg. dynamic_template_data or substitutions.
-                A given value should have key equivalent to corresponding msg attr
+                A given value should have key equivalent to the corresponding EmailMessage attr
 
 
         Returns:
             A sendgrid personalization instance
         """
-        personalization = existing_personalizations or Personalization()
 
-        if to:
-            if type(to[0]) == str:
-                for addr in to:
-                    personalization.add_to(Email(*self._parse_email_address(addr)))
-            else:
-                personalization.tos = to
+        if existing_personalizations is None:
+            if not to:
+                raise ValueError(
+                    "Either msg.to or msg.personalizations (with to) is must be set"
+                )
+
+            personalization = Personalization()
+            for addr in to:
+                personalization.add_to(Email(*self._parse_email_address(addr)))
+
+        elif existing_personalizations.tos:
+            personalization = existing_personalizations
+        else:
+            raise ValueError("Each msg personalization must have recipients")
 
         if not personalization.ccs:
             for addr in msg.cc:
@@ -432,7 +439,6 @@ class SendgridBackend(BaseEmailBackend):
 
                 mail.add_personalization(
                     self._build_sg_personalization(
-                        personalization.tos or msg.to,
                         msg,
                         personalization_headers,
                         existing_personalizations=personalization,
@@ -442,17 +448,17 @@ class SendgridBackend(BaseEmailBackend):
             for to in msg.to:
                 mail.add_personalization(
                     self._build_sg_personalization(
-                        [to],
                         msg,
                         personalization_headers,
+                        to=[to],
                     )
                 )
         else:
             mail.add_personalization(
                 self._build_sg_personalization(
-                    msg.to,
                     msg,
                     personalization_headers,
+                    to=msg.to,
                 )
             )
 
