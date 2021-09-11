@@ -595,3 +595,46 @@ class TestMailGeneration(SimpleTestCase):
                 self.assertDictEqual(val, data[key])
             else:
                 self.assertEquals(val, data[key])
+
+    def test_build_personalization_errors(self):
+        msg = EmailMessage(
+            subject="Hello, World!",
+            body="Hello, World!",
+            from_email="Sam Smith <sam.smith@example.com>",
+            cc=["Stephanie Smith <stephanie.smith@example.com>"],
+            bcc=["Sarah Smith <sarah.smith@example.com>"],
+            reply_to=["Sam Smith <sam.smith@example.com>"],
+        )
+
+        test_str = "admin@my-test-domain.com"
+        test_key_str = "my key"
+        test_val_str = "my val"
+        personalization = Personalization()
+
+        if SENDGRID_5:
+            personalization.add_cc(Email(test_str))
+            personalization.add_bcc(Email(test_str))
+        else:
+            personalization.add_cc(Cc(test_str))
+            personalization.add_bcc(Bcc(test_str))
+
+        personalization.add_custom_arg(CustomArg(test_key_str, test_val_str))
+        personalization.add_header(Header(test_key_str, test_val_str))
+        personalization.add_substitution(Substitution(test_key_str, test_val_str))
+
+        msg.personalizations = [personalization]
+        self.assertRaisesRegex(
+            ValueError,
+            "Each msg personalization must have recipients",
+            self.backend._build_sg_mail,
+            msg,
+        )
+
+        delattr(msg, "personalizations")
+        msg.dynamic_template_data = {"obi_wan": "hello there"}
+        self.assertRaisesRegex(
+            ValueError,
+            r"Either msg\.to or msg\.personalizations \(with recipients\) must be set",
+            self.backend._build_sg_mail,
+            msg,
+        )

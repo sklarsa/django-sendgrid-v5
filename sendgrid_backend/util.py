@@ -33,7 +33,7 @@ def dict_to_personalization(data: Dict[Any, Any]) -> Personalization:
     ]
     for attr in properties:
         if attr in ["tos", "ccs", "bccs"]:
-            key = attr[:-1]
+            key = attr[:-1]  # this searches the data for ["to", "cc", "bcc"]
         else:
             key = attr
 
