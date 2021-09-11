@@ -625,13 +625,13 @@ class TestMailGeneration(SimpleTestCase):
         msg.personalizations = [personalization]
         with self.assertRaises(ValueError) as e1:
             res = self.backend._build_sg_mail(msg)
-        self.assertEqual(str(e1), "Each msg personalization must have recipients")
+        self.assertEqual(e1.message, "Each msg personalization must have recipients")
 
         delattr(msg, "personalizations")
         msg.dynamic_template_data = {"obi_wan": "hello there"}
         with self.assertRaises(ValueError) as e2:
             res = self.backend._build_sg_mail(msg)
         self.assertEqual(
-            str(e2),
+            e2.message,
             "Either msg.to or msg.personalizations (with recipients) must be set",
         )
