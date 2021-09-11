@@ -629,7 +629,7 @@ class TestMailGeneration(SimpleTestCase):
 
         delattr(msg, "personalizations")
         msg.dynamic_template_data = {"obi_wan": "hello there"}
-        with self.assertRaises(ValueError, self.backend._build_sg_mail, msg) as e2:
+        with self.assertRaises(ValueError) as e2:
             res = self.backend._build_sg_mail(msg)
         self.assertEqual(
             str(e2),
