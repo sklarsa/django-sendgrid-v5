@@ -634,7 +634,7 @@ class TestMailGeneration(SimpleTestCase):
         msg.dynamic_template_data = {"obi_wan": "hello there"}
         self.assertRaisesRegex(
             ValueError,
-            "Either msg.to or msg.personalizations (with recipients) must be set",
+            r"Either msg\.to or msg\.personalizations \(with recipients\) must be set",
             self.backend._build_sg_mail,
             msg,
         )
