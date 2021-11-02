@@ -32,4 +32,4 @@ class TestPostToSendgrid(SimpleTestCase):
                 to=["John Doe <john.doe@example.com>"],
             )
             val = msg.send()
-            self.assertEquals(val, 1)
+            self.assertEqual(val, 1)
