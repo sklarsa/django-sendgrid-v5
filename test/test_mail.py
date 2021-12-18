@@ -655,15 +655,17 @@ class TestMailGeneration(SimpleTestCase):
 
         ganalytics = Ganalytics(
             enable=True,
-            utm_source='my-source',
-            utm_campaign='my-campaign',
-            utm_medium='my-medium',
+            utm_source="my-source",
+            utm_campaign="my-campaign",
+            utm_medium="my-medium",
         )
-        msg.tracking_settings = TrackingSettings(ganalytics=ganalytics, click_tracking=ClickTracking(enable=False))
+        msg.tracking_settings = TrackingSettings(
+            ganalytics=ganalytics, click_tracking=ClickTracking(enable=False)
+        )
         mail = self.backend._build_sg_mail(msg)
 
-        tracking_settings = mail.get('tracking_settings')
+        tracking_settings = mail.get("tracking_settings")
         assert tracking_settings
-        assert not tracking_settings['click_tracking']['enable']
-        assert 'ganalytics' in tracking_settings
-        assert tracking_settings['ganalytics']['utm_source'] == 'my-source'
+        assert not tracking_settings["click_tracking"]["enable"]
+        assert "ganalytics" in tracking_settings
+        assert tracking_settings["ganalytics"]["utm_source"] == "my-source"
