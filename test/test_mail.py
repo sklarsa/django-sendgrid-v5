@@ -331,21 +331,45 @@ class TestMailGeneration(SimpleTestCase):
             img.add_header("Content-ID", "<linux_penguin>")
             msg.attach(img)
 
+        with open("test/linux-penguin.png", "rb") as f:
+            img = MIMEImage(f.read())
+            img.add_header("Content-ID", '<linux_penguin_with_method>')
+            img.set_param("method", "REQUEST")
+            msg.attach(img)
+
         result = self.backend._build_sg_mail(msg)
         self.assertEqual(len(result["content"]), 2)
         self.assertDictEqual(result["content"][0], {"type": "text/plain", "value": " "})
         self.assertDictEqual(
             result["content"][1], {"type": "text/html", "value": content}
         )
-        self.assertEqual(len(result["attachments"]), 1)
-        self.assertEqual(result["attachments"][0]["content_id"], "linux_penguin")
+        self.assertEqual(len(result["attachments"]), 2)
 
-        with open("test/linux-penguin.png", "rb") as f:
-            self.assertEqual(
-                bytearray(result["attachments"][0]["content"], "utf-8"),
-                base64.b64encode(f.read()),
-            )
-        self.assertEqual(result["attachments"][0]["type"], "image/png")
+        # First test image with no method param
+        found_first_img = False
+        found_second_img = False
+
+        for attch in result["attachments"]:
+            content_id = attch["content_id"]
+            if content_id == "linux_penguin":
+                found_first_img = True
+
+                with open("test/linux-penguin.png", "rb") as f:
+                    self.assertEqual(
+                        bytearray(attch["content"], "utf-8"),
+                        base64.b64encode(f.read()),
+                    )
+                self.assertEqual(attch["type"], "image/png")
+            elif content_id == "linux_penguin_with_method":
+                found_second_img = True
+                self.assertEqual(attch["type"],"image/png; method=REQUEST;")
+            else:
+                raise Exception(f"Unexpected content_id {content_id}")
+
+        self.assertTrue(found_first_img and found_second_img)
+
+        # Next test image with method param
+        img1 = result["attachments"][1]
 
     def test_templating_sendgrid_v5(self):
         """
