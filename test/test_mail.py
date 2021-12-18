@@ -659,9 +659,16 @@ class TestMailGeneration(SimpleTestCase):
             utm_campaign="my-campaign",
             utm_medium="my-medium",
         )
-        msg.tracking_settings = TrackingSettings(
-            ganalytics=ganalytics, click_tracking=ClickTracking(enable=False)
-        )
+        if SENDGRID_5:
+            tracking_settings = TrackingSettings()
+            tracking_settings.ganalytics = ganalytics
+            tracking_settings.click_tracking = ClickTracking(enable=False)
+            msg.tracking_settings = tracking_settings
+        else:
+            msg.tracking_settings = TrackingSettings(
+                ganalytics=ganalytics, click_tracking=ClickTracking(enable=False)
+            )
+
         mail = self.backend._build_sg_mail(msg)
 
         tracking_settings = mail.get("tracking_settings")
