@@ -333,7 +333,7 @@ class TestMailGeneration(SimpleTestCase):
 
         with open("test/linux-penguin.png", "rb") as f:
             img = MIMEImage(f.read())
-            img.add_header("Content-ID", '<linux_penguin_with_method>')
+            img.add_header("Content-ID", "<linux_penguin_with_method>")
             img.set_param("method", "REQUEST")
             msg.attach(img)
 
@@ -362,7 +362,7 @@ class TestMailGeneration(SimpleTestCase):
                 self.assertEqual(attch["type"], "image/png")
             elif content_id == "linux_penguin_with_method":
                 found_second_img = True
-                self.assertEqual(attch["type"],"image/png; method=REQUEST;")
+                self.assertEqual(attch["type"], "image/png; method=REQUEST;")
             else:
                 raise Exception(f"Unexpected content_id {content_id}")
 

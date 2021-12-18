@@ -216,9 +216,9 @@ class SendgridBackend(BaseEmailBackend):
             content_type = django_attch.get_content_type()
             method = django_attch.get_param("method")
             if method:
-                if content_type.strip()[-1] != ';':
-                    content_type += ';'
-                content_type += f' method={method};'
+                if content_type.strip()[-1] != ";":
+                    content_type += ";"
+                content_type += f" method={method};"
             set_prop(sg_attch, "type", content_type)
 
             content_id = django_attch.get("Content-ID")
