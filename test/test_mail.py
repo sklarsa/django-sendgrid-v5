@@ -5,11 +5,14 @@ from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
 from sendgrid.helpers.mail import (
+    ClickTracking,
     CustomArg,
     Email,
+    Ganalytics,
     Header,
     Personalization,
     Substitution,
+    TrackingSettings,
 )
 
 from sendgrid_backend.mail import SendgridBackend
@@ -638,3 +641,38 @@ class TestMailGeneration(SimpleTestCase):
             self.backend._build_sg_mail,
             msg,
         )
+
+    def test_tracking_config(self):
+        msg = EmailMessage(
+            subject="Hello, World!",
+            body="Hello, World!",
+            from_email="Sam Smith <sam.smith@example.com>",
+            to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
+            cc=["Stephanie Smith <stephanie.smith@example.com>"],
+            bcc=["Sarah Smith <sarah.smith@example.com>"],
+            reply_to=["Sam Smith <sam.smith@example.com>"],
+        )
+
+        ganalytics = Ganalytics(
+            enable=True,
+            utm_source="my-source",
+            utm_campaign="my-campaign",
+            utm_medium="my-medium",
+        )
+        if SENDGRID_5:
+            tracking_settings = TrackingSettings()
+            tracking_settings.ganalytics = ganalytics
+            tracking_settings.click_tracking = ClickTracking(enable=False)
+            msg.tracking_settings = tracking_settings
+        else:
+            msg.tracking_settings = TrackingSettings(
+                ganalytics=ganalytics, click_tracking=ClickTracking(enable=False)
+            )
+
+        mail = self.backend._build_sg_mail(msg)
+
+        tracking_settings = mail.get("tracking_settings")
+        assert tracking_settings
+        assert not tracking_settings["click_tracking"]["enable"]
+        assert "ganalytics" in tracking_settings
+        assert tracking_settings["ganalytics"]["utm_source"] == "my-source"

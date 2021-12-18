@@ -479,11 +479,18 @@ class SendgridBackend(BaseEmailBackend):
         mail_settings.sandbox_mode = SandBoxMode(self.sandbox_mode)
         mail.mail_settings = mail_settings
 
-        tracking_settings = TrackingSettings()
-        tracking_settings.open_tracking = OpenTracking(self.track_email)
-        tracking_settings.click_tracking = ClickTracking(
-            self.track_clicks_html, self.track_clicks_plain
-        )
+        # Handle email tracking
+        tracking_settings = getattr(msg, "tracking_settings", None)
+        if not isinstance(tracking_settings, TrackingSettings):
+            tracking_settings = TrackingSettings()
+
+        if tracking_settings.open_tracking is None:
+            tracking_settings.open_tracking = OpenTracking(self.track_email)
+
+        if tracking_settings.click_tracking is None:
+            tracking_settings.click_tracking = ClickTracking(
+                self.track_clicks_html, self.track_clicks_plain
+            )
 
         mail.tracking_settings = tracking_settings
 
