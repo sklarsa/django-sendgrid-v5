@@ -1,11 +1,9 @@
 import base64
 from email.mime.image import MIMEImage
-from unittest.case import SkipTest
 
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
-from nose.plugins import skip
 from sendgrid.helpers.mail import (
     ClickTracking,
     CustomArg,
@@ -16,7 +14,6 @@ from sendgrid.helpers.mail import (
     Substitution,
     TrackingSettings,
 )
-from sendgrid.helpers.mail.open_tracking import OpenTracking
 
 from sendgrid_backend.mail import SendgridBackend
 from sendgrid_backend.util import SENDGRID_5, SENDGRID_6, dict_to_personalization
@@ -656,41 +653,19 @@ class TestMailGeneration(SimpleTestCase):
             reply_to=["Sam Smith <sam.smith@example.com>"],
         )
 
-        msg.tracking_settings = TrackingSettings(
-            click_tracking=ClickTracking(enable=False),
-            open_tracking=OpenTracking(enable=False),
-        )
-        mail = self.backend._build_sg_mail(msg)
-
-        tracking_settings = mail.get("tracking_settings")
-        assert tracking_settings
-        assert not tracking_settings["click_tracking"]["enable"]
-        assert not tracking_settings["open_tracking"]["enable"]
-
-    def test_ganalytics_tracking(self):
-        if SENDGRID_5:
-            raise SkipTest()
-
-        msg = EmailMessage(
-            subject="Hello, World!",
-            body="Hello, World!",
-            from_email="Sam Smith <sam.smith@example.com>",
-            to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
-            cc=["Stephanie Smith <stephanie.smith@example.com>"],
-            bcc=["Sarah Smith <sarah.smith@example.com>"],
-            reply_to=["Sam Smith <sam.smith@example.com>"],
-        )
-
         ganalytics = Ganalytics(
             enable=True,
             utm_source="my-source",
             utm_campaign="my-campaign",
             utm_medium="my-medium",
         )
-        msg.tracking_settings = TrackingSettings(ganalytics=ganalytics)
+        msg.tracking_settings = TrackingSettings(
+            ganalytics=ganalytics, click_tracking=ClickTracking(enable=False)
+        )
         mail = self.backend._build_sg_mail(msg)
 
         tracking_settings = mail.get("tracking_settings")
         assert tracking_settings
+        assert not tracking_settings["click_tracking"]["enable"]
         assert "ganalytics" in tracking_settings
         assert tracking_settings["ganalytics"]["utm_source"] == "my-source"
