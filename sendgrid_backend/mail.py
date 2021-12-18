@@ -480,7 +480,7 @@ class SendgridBackend(BaseEmailBackend):
         mail.mail_settings = mail_settings
 
         # Handle email tracking
-        tracking_settings = getattr(msg, 'tracking_settings', None)
+        tracking_settings = getattr(msg, "tracking_settings", None)
         if not isinstance(tracking_settings, TrackingSettings):
             tracking_settings = TrackingSettings()
 
