@@ -3,7 +3,7 @@ import os
 from django.core.mail import EmailMessage
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
-from nose.plugins.skip import SkipTest
+from nose2.plugins.skip import SkipTest
 
 
 class TestPostToSendgrid(SimpleTestCase):
