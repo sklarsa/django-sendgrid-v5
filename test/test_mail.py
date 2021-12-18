@@ -362,7 +362,7 @@ class TestMailGeneration(SimpleTestCase):
         result = self.backend._build_sg_mail(msg)
 
         self.assertIn("template_id", result)
-        self.assertEquals(result["template_id"], "test_template")
+        self.assertEqual(result["template_id"], "test_template")
 
     def test_templating_sendgrid(self):
         """
@@ -381,13 +381,13 @@ class TestMailGeneration(SimpleTestCase):
             result = self.backend._build_sg_mail(msg)
 
             self.assertIn("template_id", result)
-            self.assertEquals(result["template_id"], "test_template")
+            self.assertEqual(result["template_id"], "test_template")
             # Testing that for sendgrid v5 the code behave in the same way
-            self.assertEquals(
+            self.assertEqual(
                 result["content"], [{"type": "text/plain", "value": "Hello, World!"}]
             )
-            self.assertEquals(result["subject"], "Hello, World!")
-            self.assertEquals(result["personalizations"][0]["subject"], "Hello, World!")
+            self.assertEqual(result["subject"], "Hello, World!")
+            self.assertEqual(result["personalizations"][0]["subject"], "Hello, World!")
         else:
             msg = EmailMessage(
                 from_email="Sam Smith <sam.smith@example.com>",
@@ -402,8 +402,8 @@ class TestMailGeneration(SimpleTestCase):
             result = self.backend._build_sg_mail(msg)
 
             self.assertIn("template_id", result)
-            self.assertEquals(result["template_id"], "test_template")
-            self.assertEquals(
+            self.assertEqual(result["template_id"], "test_template")
+            self.assertEqual(
                 result["personalizations"][0]["dynamic_template_data"],
                 msg.dynamic_template_data,
             )
@@ -534,14 +534,14 @@ class TestMailGeneration(SimpleTestCase):
 
         for field in ("to", "cc", "bcc"):
             data = personalization[field]
-            self.assertEquals(len(data), 1)
-            self.assertEquals(data[0]["email"], test_str)
+            self.assertEqual(len(data), 1)
+            self.assertEqual(data[0]["email"], test_str)
 
         for field in ("custom_args", "headers", "substitutions"):
             data = personalization[field]
-            self.assertEquals(len(data), 1)
+            self.assertEqual(len(data), 1)
             self.assertIn(test_key_str, data)
-            self.assertEquals(test_val_str, data[test_key_str])
+            self.assertEqual(test_val_str, data[test_key_str])
 
     def test_dict_to_personalization(self):
         """
@@ -594,7 +594,7 @@ class TestMailGeneration(SimpleTestCase):
             elif type(val) == dict:
                 self.assertDictEqual(val, data[key])
             else:
-                self.assertEquals(val, data[key])
+                self.assertEqual(val, data[key])
 
     def test_build_personalization_errors(self):
         msg = EmailMessage(
