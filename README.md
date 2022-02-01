@@ -109,8 +109,8 @@ msg.send(fail_silently=False)
 ```
 
 
-## FAQ
-How to change a Sender's Name ?
+### FAQ
+**How to change a Sender's Name ?**
 
 
 `from_email="John Smith <john.smith@example.org>"`
@@ -121,6 +121,18 @@ msg = EmailMessage(
   from_email='Sender Name <from@example.com>',
   to=['to@example.com'],
 )
+```
+
+**How to make mails to multiple users private (hide all the email addresses to which the mail is sent) to each person (personalization) ?**
+
+
+Setting the `make_private` attribute to `True` will help us achieve it
+```
+msg = EmailMessage(
+  from_email='Sender Name <from@example.com>',
+  to=['to@example.com','abc@example.com','xyz@example.com'],
+)
+msg.make_private = True
 ```
 
 ## Examples
