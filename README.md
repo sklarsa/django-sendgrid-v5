@@ -108,6 +108,21 @@ msg.ip_pool_name = 'my-ip-pool'
 msg.send(fail_silently=False)
 ```
 
+
+## FAQ
+How to change a Sender's Name ?
+
+
+`from_email="John Smith <john.smith@example.org>"`
+You can just include the name in the from_email field of the _```EmailMessage```_ class 
+
+```
+msg = EmailMessage(
+  from_email='Sender Name <from@example.com>',
+  to=['to@example.com'],
+)
+```
+
 ## Examples
 
 - Marcelo Canina [(@marcanuy)](https://github.com/marcanuy) wrote a great article demonstrating how to integrate `django-sendgrid-v5` into your Django application on his site: [https://simpleit.rocks/python/django/adding-email-to-django-the-easiest-way/](https://simpleit.rocks/python/django/adding-email-to-django-the-easiest-way/)
