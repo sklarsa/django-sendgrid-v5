@@ -79,7 +79,7 @@ msg.custom_args = {'arg1': 'value1', 'arg2': 'value2'}
 msg.reply_to = 'reply-to@example.com'
 
 # Send at (accepts an integer per the sendgrid docs)
-# https://sendgrid.com/docs/API_Reference/SMTP_API/scheduling_parameters.html#-Send-At
+# https://docs.sendgrid.com/for-developers/sending-email/scheduling-parameters#send-at
 msg.send_at = 1600188812
 
 # Transactional templates
