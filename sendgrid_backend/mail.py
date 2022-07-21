@@ -484,8 +484,13 @@ class SendgridBackend(BaseEmailBackend):
             else:
                 mail.asm = ASM(msg.asm["group_id"])
 
-        mail_settings = MailSettings()
+        # Add sandbox mode to mail settings
+        mail_settings = getattr(msg, "mail_settings", None)
+        if not isinstance(mail_settings, MailSettings):
+            mail_settings = MailSettings()
+
         mail_settings.sandbox_mode = SandBoxMode(self.sandbox_mode)
+
         mail.mail_settings = mail_settings
 
         # Handle email tracking

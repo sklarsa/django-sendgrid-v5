@@ -5,11 +5,14 @@ from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
 from sendgrid.helpers.mail import (
+    BypassBounceManagement,
+    BypassSpamManagement,
     ClickTracking,
     CustomArg,
     Email,
     Ganalytics,
     Header,
+    MailSettings,
     Personalization,
     Substitution,
     TrackingSettings,
@@ -665,6 +668,30 @@ class TestMailGeneration(SimpleTestCase):
             self.backend._build_sg_mail,
             msg,
         )
+
+    def test_mail_config(self):
+        msg = EmailMessage(
+            subject="Hello, World!",
+            body="Hello, World!",
+            from_email="Sam Smith <sam.smith@example.com>",
+            to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
+            cc=["Stephanie Smith <stephanie.smith@example.com>"],
+            bcc=["Sarah Smith <sarah.smith@example.com>"],
+            reply_to=["Sam Smith <sam.smith@example.com>"],
+        )
+
+        msg.mail_settings = MailSettings(
+            bypass_bounce_management=BypassBounceManagement(enable=True),
+            bypass_spam_management=BypassBounceManagement(enable=False),
+        )
+
+        mail = self.backend._build_sg_mail(msg)
+
+        mail_settings = mail.get("mail_settings")
+        assert mail_settings
+        assert mail_settings["bypass_bounce_management"]["enable"]
+        assert not mail_settings["bypass_spam_management"]["enable"]
+        assert not "bypass_list_management" in mail_settings
 
     def test_tracking_config(self):
         msg = EmailMessage(
