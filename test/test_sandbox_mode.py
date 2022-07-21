@@ -25,9 +25,9 @@ class TestSandboxMode(SimpleTestCase):
             to=["John Doe <john.doe@example.com>"],
         )
         # additional setting to test existing settings preserved then sandbox_mode populated
-        msg_with_settings.mail_settings = MailSettings(
-            bypass_list_management=BypassListManagement(enable=True)
-        )
+        mail_settings = MailSettings()
+        mail_settings.bypass_list_management = BypassListManagement(enable=True)
+        msg_with_settings.mail_settings = mail_settings
 
         # Sandbox mode should be False
         with override_settings(DEBUG=False, SENDGRID_SANDBOX_MODE_IN_DEBUG=True):
