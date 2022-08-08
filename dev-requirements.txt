@@ -1,5 +1,5 @@
 black==22.3.0
-coverage==6.4.3
+coverage==6.2
 flake8==3.8.4
 importlib-metadata==3.6.0
 isort==5.7.0
