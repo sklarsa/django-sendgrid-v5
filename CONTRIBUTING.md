@@ -18,7 +18,7 @@ Installing the development environment
 
 3. If you want to run tests that post to the sendgrid API directly, you need to set an environment variable, `SENDGRID_API_KEY`.  Otherwise, related tests will fail.
 
-4. Run the unit tests `nosetests -c nose.cfg`
+4. Run the unit tests `tox`
 
 5. Run code linting/formatting/type checking (from the repository's root directory), and correct any issues:
 
@@ -28,4 +28,3 @@ Installing the development environment
    black ./
    mypy sendgrid_backend/
    ```
-   
