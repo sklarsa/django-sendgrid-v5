@@ -441,10 +441,10 @@ class SendgridBackend(BaseEmailBackend):
 
         if hasattr(msg, "personalizations"):
             for personalization in msg.personalizations:
-                if type(personalization) == Dict:
+                if isinstance(personalization, Dict):
                     personalization = dict_to_personalization(personalization)
 
-                assert type(personalization) == Personalization
+                assert isinstance(personalization, Personalization)
 
                 mail.add_personalization(
                     self._build_sg_personalization(
