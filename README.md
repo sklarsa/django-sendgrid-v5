@@ -138,7 +138,7 @@ msg.make_private = True
 ## Examples
 
 - Marcelo Canina [(@marcanuy)](https://github.com/marcanuy) wrote a great article demonstrating how to integrate `django-sendgrid-v5` into your Django application on his site: [https://simpleit.rocks/python/django/adding-email-to-django-the-easiest-way/](https://simpleit.rocks/python/django/adding-email-to-django-the-easiest-way/)
-- RX-36 [(@DevWoody856)](https://github.com/DevWoody856) demonstrates how to use `django-sendgrid-v5` to make a contact form for your web application: https://rx-36.life/post/create-a-contact-form-using-sendgrid-in-django/
+- RX-36 [(@DevWoody856)](https://github.com/DevWoody856) demonstrates how to use `django-sendgrid-v5` to make a contact form for your web application: https://rx-36.life/create-a-contact-form-using-sendgrid-with-django/
 
 
 ## Stargazers over time
