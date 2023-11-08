@@ -13,7 +13,6 @@ from sendgrid.helpers.mail import (
     Header,
     MailSettings,
     Personalization,
-    ReplyTo,
     SpamCheck,
     Substitution,
     TrackingSettings,
@@ -729,6 +728,7 @@ class TestMailGeneration(SimpleTestCase):
         assert "ganalytics" in tracking_settings
         assert tracking_settings["ganalytics"]["utm_source"] == "my-source"
 
+    @pytest.mark.skipif(SENDGRID_5)
     def test_reply_to_list(self):
         msg = EmailMessage(
             subject="Hello, World!",
