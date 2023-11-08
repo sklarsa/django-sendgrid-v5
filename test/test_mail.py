@@ -1,7 +1,6 @@
 import base64
 from email.mime.image import MIMEImage
 
-import pytest
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
@@ -729,7 +728,6 @@ class TestMailGeneration(SimpleTestCase):
         assert "ganalytics" in tracking_settings
         assert tracking_settings["ganalytics"]["utm_source"] == "my-source"
 
-    @pytest.mark.skipif(SENDGRID_5, reason="not supported in v5")
     def test_reply_to_list(self):
         msg = EmailMessage(
             subject="Hello, World!",
@@ -744,10 +742,13 @@ class TestMailGeneration(SimpleTestCase):
 
         mail = self.backend._build_sg_mail(msg)
 
-        reply_to_list = mail["reply_to_list"]
-        assert reply_to_list
-        assert len(reply_to_list) == 2
-        assert reply_to_list[0].get("email") == "john.doe@example.com"
-        assert reply_to_list[0].get("name") == "John Doe"
-        assert reply_to_list[1].get("email") == "jane.doe@example.com"
-        assert not reply_to_list[1].get("name")
+        reply_to_list = mail.get("reply_to_list")
+        if SENDGRID_5:
+            assert not reply_to_list
+        else:
+            assert reply_to_list
+            assert len(reply_to_list) == 2
+            assert reply_to_list[0].get("email") == "john.doe@example.com"
+            assert reply_to_list[0].get("name") == "John Doe"
+            assert reply_to_list[1].get("email") == "jane.doe@example.com"
+            assert not reply_to_list[1].get("name")
