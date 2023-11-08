@@ -743,11 +743,10 @@ class TestMailGeneration(SimpleTestCase):
 
         mail = self.backend._build_sg_mail(msg)
 
-        reply_to_list = msg.reply_to_list
+        reply_to_list = mail["reply_to_list"]
         assert reply_to_list
         assert len(reply_to_list) == 2
-        assert isinstance(reply_to_list[0], ReplyTo)
-        assert reply_to_list[0].email == "john.doe@example.com"
-        assert reply_to_list[0].name == "John Doe"
-        assert reply_to_list[1].email == "jane.doe@example.com"
-        assert reply_to_list[1].name == ""
+        assert reply_to_list[0].get("email") == "john.doe@example.com"
+        assert reply_to_list[0].get("name") == "John Doe"
+        assert reply_to_list[1].get("email") == "jane.doe@example.com"
+        assert not reply_to_list[1].get("name")
