@@ -13,6 +13,7 @@ from sendgrid.helpers.mail import (
     Header,
     MailSettings,
     Personalization,
+    ReplyTo,
     SpamCheck,
     Substitution,
     TrackingSettings,
@@ -727,3 +728,26 @@ class TestMailGeneration(SimpleTestCase):
         assert not tracking_settings["click_tracking"]["enable"]
         assert "ganalytics" in tracking_settings
         assert tracking_settings["ganalytics"]["utm_source"] == "my-source"
+
+    def test_reply_to_list(self):
+        msg = EmailMessage(
+            subject="Hello, World!",
+            body="Hello, World!",
+            from_email="Sam Smith <sam.smith@example.com>",
+            to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
+            cc=["Stephanie Smith <stephanie.smith@example.com>"],
+            bcc=["Sarah Smith <sarah.smith@example.com>"],
+        )
+
+        msg.reply_to_list = ["John Doe <john.doe@example.com>", "jane.doe@example.com"]
+
+        mail = self.backend._build_sg_mail(msg)
+
+        reply_to_list = msg.reply_to_list
+        assert reply_to_list
+        assert len(reply_to_list) == 2
+        assert isinstance(reply_to_list[0], ReplyTo)
+        assert reply_to_list[0].email == "john.doe@example.com"
+        assert reply_to_list[0].name == "John Doe"
+        assert reply_to_list[1].email == "jane.doe@example.com"
+        assert reply_to_list[1].name == "" 

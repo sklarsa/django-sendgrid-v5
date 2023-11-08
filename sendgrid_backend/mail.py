@@ -28,6 +28,7 @@ from sendgrid.helpers.mail import (
     MailSettings,
     OpenTracking,
     Personalization,
+    ReplyTo,
     SandBoxMode,
     Substitution,
     TrackingSettings,
@@ -470,6 +471,12 @@ class SendgridBackend(BaseEmailBackend):
                     to=msg.to,
                 )
             )
+
+        if hasattr(msg, "reply_to_list"):
+            mail.reply_to_list = [
+                ReplyTo(*_parse_email_address(e))
+                for e in msg.reply_to_list
+            ]
 
         if hasattr(msg, "categories"):
             for cat in msg.categories:
