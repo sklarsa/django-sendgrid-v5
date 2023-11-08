@@ -729,7 +729,7 @@ class TestMailGeneration(SimpleTestCase):
         assert "ganalytics" in tracking_settings
         assert tracking_settings["ganalytics"]["utm_source"] == "my-source"
 
-    @pytest.mark.skipif(SENDGRID_5)
+    @pytest.mark.skipif(SENDGRID_5, reason="not supported in v5")
     def test_reply_to_list(self):
         msg = EmailMessage(
             subject="Hello, World!",
