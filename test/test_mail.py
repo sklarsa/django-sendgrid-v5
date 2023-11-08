@@ -1,6 +1,7 @@
 import base64
 from email.mime.image import MIMEImage
 
+import pytest
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.test import override_settings
 from django.test.testcases import SimpleTestCase
