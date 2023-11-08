@@ -750,4 +750,4 @@ class TestMailGeneration(SimpleTestCase):
         assert reply_to_list[0].email == "john.doe@example.com"
         assert reply_to_list[0].name == "John Doe"
         assert reply_to_list[1].email == "jane.doe@example.com"
-        assert reply_to_list[1].name == "" 
+        assert reply_to_list[1].name == ""
