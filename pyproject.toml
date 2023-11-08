@@ -11,7 +11,7 @@ profile = "black"
 multi_line_output = 3
 
 [tool.poetry]
-name = "django-sendgrid-v5"
+name = "sendgrid_backend"
 version = "1.2.2"
 description = "An implementation of Django's EmailBackend compatible with sendgrid-python v5+"
 authors = ["Steven Sklar <sklarsa@gmail.com>"]
