@@ -727,3 +727,28 @@ class TestMailGeneration(SimpleTestCase):
         assert not tracking_settings["click_tracking"]["enable"]
         assert "ganalytics" in tracking_settings
         assert tracking_settings["ganalytics"]["utm_source"] == "my-source"
+
+    def test_reply_to_list(self):
+        msg = EmailMessage(
+            subject="Hello, World!",
+            body="Hello, World!",
+            from_email="Sam Smith <sam.smith@example.com>",
+            to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
+            cc=["Stephanie Smith <stephanie.smith@example.com>"],
+            bcc=["Sarah Smith <sarah.smith@example.com>"],
+        )
+
+        msg.reply_to_list = ["John Doe <john.doe@example.com>", "jane.doe@example.com"]
+
+        mail = self.backend._build_sg_mail(msg)
+
+        reply_to_list = mail.get("reply_to_list")
+        if SENDGRID_5:
+            assert not reply_to_list
+        else:
+            assert reply_to_list
+            assert len(reply_to_list) == 2
+            assert reply_to_list[0].get("email") == "john.doe@example.com"
+            assert reply_to_list[0].get("name") == "John Doe"
+            assert reply_to_list[1].get("email") == "jane.doe@example.com"
+            assert not reply_to_list[1].get("name")
