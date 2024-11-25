@@ -67,7 +67,7 @@ class SendgridBackend(BaseEmailBackend):
         fail_silently = False
 
     def __init__(self, *args, **kwargs):
-        super(SendgridBackend, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Check for the API key either in the SENDGRID_API_KEY django setting,
         # or passed as an argument to the init function, which takes precedence
@@ -176,7 +176,9 @@ class SendgridBackend(BaseEmailBackend):
             except HTTPError as e:
                 message = getattr(e, "body", None)
                 logger.error(
-                    "Failed to send email, error: %s, response body: %s" % (e, message)
+                    "Failed to send email, error: {}, response body: {}".format(
+                        e, message
+                    )
                 )
                 if not self.fail_silently:
                     raise
@@ -199,7 +201,7 @@ class SendgridBackend(BaseEmailBackend):
             else:
                 if prop_name == "filename":
                     prop_name = "name"
-                setattr(attachment, "file_{}".format(prop_name), value)
+                setattr(attachment, f"file_{prop_name}", value)
 
         sg_attch = Attachment()
 
@@ -207,7 +209,7 @@ class SendgridBackend(BaseEmailBackend):
             filename = django_attch.get_filename()
             if not filename:
                 ext = mimetypes.guess_extension(django_attch.get_content_type())
-                filename = "part-{0}{1}".format(uuid.uuid4().hex, ext)
+                filename = f"part-{uuid.uuid4().hex}{ext}"
             set_prop(sg_attch, "filename", filename)
             # todo: Read content if stream?
             set_prop(sg_attch, "content", django_attch.get_payload().replace("\n", ""))
