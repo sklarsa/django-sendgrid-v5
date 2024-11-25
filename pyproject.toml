@@ -21,6 +21,16 @@ legacy_tox_ini = """
         django{5}-py{310,311,312}-sendgrid{5,6}
         django{51}-py{310,311,312,313}-sendgrid{5,6}
 
+    [gh-actions]
+    python =
+        3.7: py37
+        3.8: py38
+        3.9: py39
+        3.10: py310
+        3.11: py311
+        3.12: py312
+        3.13: py313
+
     [testenv]
     deps =
         django18: Django>=1.8,<1.9
