@@ -31,7 +31,7 @@ class TestMailGeneration(SimpleTestCase):
 
     @classmethod
     def setUpClass(self):
-        super(TestMailGeneration, self).setUpClass()
+        super().setUpClass()
         with override_settings(
             EMAIL_BACKEND="sendgrid_backend.SendgridBackend",
             SENDGRID_API_KEY="DUMMY_API_KEY",
