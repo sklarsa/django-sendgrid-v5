@@ -13,7 +13,6 @@ from sendgrid.helpers.mail import (
     Header,
     MailSettings,
     Personalization,
-    SpamCheck,
     Substitution,
     TrackingSettings,
 )
