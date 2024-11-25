@@ -52,7 +52,7 @@ class TestPostToSendgrid(SimpleTestCase):
         settings = {
             "DEBUG": True,
             "SENDGRID_API_KEY": SENDGRID_API_KEY,
-            "SENDGRID_HOST_URL": "api.eu.sendgrid.com",
+            "SENDGRID_HOST_URL": "https://api.eu.sendgrid.com",
             "EMAIL_BACKEND": "sendgrid_backend.SendgridBackend",
         }
 
