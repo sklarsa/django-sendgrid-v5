@@ -36,9 +36,10 @@ class TestPostToSendgrid(SimpleTestCase):
             val = msg.send()
             self.assertEqual(val, 1)
 
+    # TESTING_SENDGRID_EU_API_KEY is only used for testing.
     @pytest.mark.skipif(
-        not os.environ.get("SENDGRID_API_KEY"),
-        reason="requires SENDGRID_API_KEY env var",
+        not os.environ.get("TESTING_SENDGRID_EU_API_KEY"),
+        reason="requires TESTING_SENDGRID_EU_API_KEY env var",
     )
     def test_eu_post(self):
         """
@@ -46,7 +47,7 @@ class TestPostToSendgrid(SimpleTestCase):
         in GitHub.
         """
 
-        SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
+        SENDGRID_API_KEY = os.environ.get("TESTING_SENDGRID_EU_API_KEY")
 
         # Set DEBUG=True so sandbox mode is enabled
         settings = {
