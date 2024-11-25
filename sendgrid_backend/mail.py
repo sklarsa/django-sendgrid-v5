@@ -219,8 +219,8 @@ class SendgridBackend(BaseEmailBackend):
             set_prop(sg_attch, "filename", filename)
             # todo: Read content if stream?
             payload = django_attch.get_payload()
-            #if isinstance(payload, str):
-            payload = payload.replace("\n", "")
+            if isinstance(payload, str):
+                payload = payload.replace("\n", "")
             set_prop(sg_attch, "content", payload)
 
             # Content-type handling.  Includes the 'method' param.
