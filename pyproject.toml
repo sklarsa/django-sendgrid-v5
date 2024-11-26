@@ -49,6 +49,9 @@ line_length = 88
 profile = "black"
 multi_line_output = 3
 
+[tool.setuptools.dynamic]
+version = {attr = "sendgrid_backend.version.__version__"}
+
 [tool.tox]
 legacy_tox_ini = """
     [tox]
