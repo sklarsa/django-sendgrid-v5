@@ -52,6 +52,9 @@ multi_line_output = 3
 [tool.setuptools.dynamic]
 version = {attr = "sendgrid_backend.version.__version__"}
 
+[tool.setuptools.packages.find]
+exclude = ["test*"]
+
 [tool.tox]
 legacy_tox_ini = """
     [tox]
