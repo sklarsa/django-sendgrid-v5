@@ -44,4 +44,5 @@ jobs:
     - name: Test with tox
       env:
         SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+        TESTING_SENDGRID_EU_API_KEY: ${{ secrets.TESTING_SENDGRID_EU_API_KEY }}
       run: tox

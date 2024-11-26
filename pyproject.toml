@@ -51,6 +51,7 @@ legacy_tox_ini = """
 
     commands =
         pytest ./test --cov=sendgrid_backend
-    passenv =
+    pass_env =
         SENDGRID_API_KEY
+        TESTING_SENDGRID_EU_API_KEY
 """

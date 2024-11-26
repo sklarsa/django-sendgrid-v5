@@ -73,15 +73,23 @@ class SendgridBackend(BaseEmailBackend):
         # or passed as an argument to the init function, which takes precedence
         # over the setting.
 
+        sg_args = {}
         if "api_key" in kwargs:
-            self.sg = SendGridAPIClient(api_key=kwargs["api_key"])
+            sg_args["api_key"] = kwargs["api_key"]
         elif hasattr(settings, "SENDGRID_API_KEY") and settings.SENDGRID_API_KEY:
-            self.sg = SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+            sg_args["api_key"] = settings.SENDGRID_API_KEY
         else:
             raise ImproperlyConfigured(
                 "settings.py must contain a value for SENDGRID_API_KEY.  "
                 + "You may also pass a value to the api_key argument (optional)."
             )
+
+        if "host" in kwargs:
+            sg_args["host"] = kwargs["host"]
+        elif hasattr(settings, "SENDGRID_HOST_URL") and settings.SENDGRID_HOST_URL:
+            sg_args["host"] = settings.SENDGRID_HOST_URL
+
+        self.sg = SendGridAPIClient(**sg_args)
 
         # Configure sandbox mode based on settings
         sandbox_mode_in_debug = get_django_setting(
@@ -212,7 +220,10 @@ class SendgridBackend(BaseEmailBackend):
                 filename = f"part-{uuid.uuid4().hex}{ext}"
             set_prop(sg_attch, "filename", filename)
             # todo: Read content if stream?
-            set_prop(sg_attch, "content", django_attch.get_payload().replace("\n", ""))
+            payload = django_attch.get_payload()
+            if isinstance(payload, str):
+                payload = payload.replace("\n", "")
+            set_prop(sg_attch, "content", payload)
 
             # Content-type handling.  Includes the 'method' param.
             content_type = django_attch.get_content_type()
