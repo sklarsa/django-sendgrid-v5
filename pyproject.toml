@@ -33,6 +33,8 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/sklarsa/django-sendgrid-v5"
+Changelog = "https://github.com/sklarsa/django-sendgrid-v5/releases"
+Bug = "https://github.com/sklarsa/django-sendgrid-v5/issues"
 
 [tool.black]
 multi_line_output = 3
