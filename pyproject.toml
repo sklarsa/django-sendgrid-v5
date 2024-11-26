@@ -1,3 +1,42 @@
+[project]
+name = "django-sendgrid-v5"
+dynamic = ["version"]
+description = "An implementation of Django's EmailBackend compatible with sendgrid-python v5+"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    { name = "Steven Sklar", email = "sklarsa@gmail.com" },
+]
+keywords = [
+    "backend",
+    "django",
+    "email",
+    "sendgrid",
+]
+classifiers = [
+    "Framework :: Django",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "django >=1.8",
+    "python-http-client >=3.0.0",
+    "sendgrid >=5.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/sklarsa/django-sendgrid-v5"
+Changelog = "https://github.com/sklarsa/django-sendgrid-v5/releases"
+Bug = "https://github.com/sklarsa/django-sendgrid-v5/issues"
+
 [tool.black]
 multi_line_output = 3
 include_trailing_comma = true
@@ -9,6 +48,12 @@ line_length = 88
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+
+[tool.setuptools.dynamic]
+version = {attr = "sendgrid_backend.version.__version__"}
+
+[tool.setuptools.packages.find]
+exclude = ["test*"]
 
 [tool.tox]
 legacy_tox_ini = """
