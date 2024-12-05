@@ -7,8 +7,9 @@ import sys
 import threading
 import uuid
 import warnings
+from collections.abc import Iterable
 from email.mime.base import MIMEBase
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -41,7 +42,7 @@ from sendgrid_backend.util import (
     get_django_setting,
 )
 
-DjangoAttachment = Union[Tuple[str, Union[bytes, str], str], MIMEBase]
+DjangoAttachment = Union[tuple[str, Union[bytes, str], str], MIMEBase]
 
 # Need to change imports because of breaking changes in sendgrid's v6 api
 # https://github.com/sendgrid/sendgrid-python/releases/tag/v6.0.0
@@ -258,7 +259,7 @@ class SendgridBackend(BaseEmailBackend):
 
         return sg_attch
 
-    def _parse_email_address(self, address: str) -> Tuple[str, Optional[str]]:
+    def _parse_email_address(self, address: str) -> tuple[str, Optional[str]]:
         """
         Returns a tuple of (addr, name) from an address string
         """
@@ -271,7 +272,7 @@ class SendgridBackend(BaseEmailBackend):
         self,
         msg: EmailMessage,
         extra_headers: Iterable[Header],
-        to: Optional[List[str]] = None,
+        to: Optional[list[str]] = None,
         existing_personalizations: Optional[Personalization] = None,
     ) -> Personalization:
         """
@@ -362,7 +363,7 @@ class SendgridBackend(BaseEmailBackend):
 
         return personalization
 
-    def _build_sg_mail(self, msg: EmailMessage) -> Dict:
+    def _build_sg_mail(self, msg: EmailMessage) -> dict:
         """
         Serializes a Django EmailMessage into its JSON representation.
 
@@ -454,7 +455,7 @@ class SendgridBackend(BaseEmailBackend):
 
         if hasattr(msg, "personalizations"):
             for personalization in msg.personalizations:
-                if isinstance(personalization, Dict):
+                if isinstance(personalization, dict):
                     personalization = dict_to_personalization(personalization)
 
                 assert isinstance(personalization, Personalization)
