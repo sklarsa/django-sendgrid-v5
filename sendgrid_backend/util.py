@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 import sendgrid
 from django.conf import settings
@@ -19,10 +19,10 @@ def get_django_setting(setting_str, default=None):
     return default
 
 
-def dict_to_personalization(data: Dict[Any, Any]) -> Personalization:
+def dict_to_personalization(data: dict[Any, Any]) -> Personalization:
     """
     Reverses Sendgrid's Personalization.get() method to create a Personalization
-    object from its emitted data structure (in the form of a Dict)
+    object from its emitted data structure (in the form of a dict)
     """
     personalization = Personalization()
 
