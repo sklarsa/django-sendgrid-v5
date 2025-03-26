@@ -301,8 +301,7 @@ class SendgridBackend(BaseEmailBackend):
 
             personalization = Personalization()
             for addr in to:
-                if addr:
-                    personalization.add_to(Email(*self._parse_email_address(addr)))
+                personalization.add_to(Email(*self._parse_email_address(addr)))
 
         elif existing_personalizations.tos:
             personalization = existing_personalizations
