@@ -48,8 +48,8 @@ class TestMailGeneration(SimpleTestCase):
             body="Hello, World!",
             from_email="Sam Smith <sam.smith@example.com>",
             to=["John Doe <john.doe@example.com>", "jane.doe@example.com"],
-            cc=["Stephanie Smith <stephanie.smith@example.com>"],
-            bcc=["Sarah Smith <sarah.smith@example.com>"],
+            cc=["Stephanie Smith <stephanie.smith@example.com>", ""],  # Include blank address to confirm that it's ignored
+            bcc=["Sarah Smith <sarah.smith@example.com>", ""],  # Include blank address to confirm that it's ignored
             reply_to=["Sam Smith <sam.smith@example.com>"],
         )
 
