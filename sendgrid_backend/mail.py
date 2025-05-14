@@ -310,11 +310,13 @@ class SendgridBackend(BaseEmailBackend):
 
         if not personalization.ccs:
             for addr in msg.cc:
-                personalization.add_cc(Email(*self._parse_email_address(addr)))
+                if addr:
+                    personalization.add_cc(Email(*self._parse_email_address(addr)))
 
         if not personalization.bccs:
             for addr in msg.bcc:
-                personalization.add_bcc(Email(*self._parse_email_address(addr)))
+                if addr:
+                    personalization.add_bcc(Email(*self._parse_email_address(addr)))
 
         if not personalization.custom_args:
             for k, v in getattr(msg, "custom_args", {}).items():
