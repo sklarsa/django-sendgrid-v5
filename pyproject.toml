@@ -77,6 +77,7 @@ legacy_tox_ini = """
         django51: Django>=5.1,<5.2
         sendgrid5: sendgrid>=5,<6
         sendgrid6: sendgrid>=6,<7
+        starkbank-ecdsa
         pytest-cov
 
     commands =

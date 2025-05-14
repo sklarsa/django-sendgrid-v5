@@ -109,6 +109,59 @@ msg.ip_pool_name = 'my-ip-pool'
 msg.send(fail_silently=False)
 ```
 
+### Webhook Helpers
+
+Version 6 of the `sendgrid` package or later includes some helper functions to
+cryptographically verify the signature and contents of events from the Sendgrid
+Events webhook.
+
+This project includes some additional helpers for Sendgrid's webhook signature
+verification.
+
+1. Enable signature verification for Sendgrid webhooks (see [Sendgrid docs](https://www.twilio.com/docs/sendgrid/for-developers/tracking-events/getting-started-event-webhook-security-features#enable-signature-verification)). Once you have saved the webhook and edited it again, copy the verification key.
+2. Modify your project's `settings.py` and set `SENDGRID_WEBHOOK_VERIFICATION_KEY` to your verification key value.
+3. Setup a project URLConf and view. Below is an example view you can adapt to your needs.
+
+```python
+import json
+from datetime import datetime
+
+from django.db import transaction
+from django.http import HttpRequest, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from post_office.models import Email, Log as EmailLog, STATUS
+from pytz import utc
+from sendgrid_backend.decorators import verify_sendgrid_webhook_signature
+
+EVENTS = {'delivered': STATUS.sent, 'bounce': STATUS.failed, 'blocked': STATUS.failed}
+
+@csrf_exempt
+@require_POST
+@verify_sendgrid_webhook_signature
+def sendgrid_deliverability_webhook_handler(request: HttpRequest) -> HttpResponse:
+    """
+    Example webhook handler to save delivered, bounce, and blocked events to
+    the email log.
+    """
+    for msg_dict in reversed(json.loads(request.body)):
+        if event := EVENTS.get(msg_dict.get('event', None), None):
+            event_timestamp = datetime.fromtimestamp(msg_dict.get('timestamp'), tz=utc)
+            with transaction.atomic():
+                Email.objects.filter(message_id=msg_dict.get('smtp-id', None)).update(
+                    last_updated=event_timestamp,
+                    status=event,
+                )
+
+                EmailLog.objects.create(
+                    email__message_id=msg_dict.get('smtp-id', None),
+                    date=event_timestamp,
+                    status=event,
+                    message=json.dumps(msg_dict),
+                )
+    return HttpResponse("ok")
+```
+
 
 ### FAQ
 **How to change a Sender's Name ?**
