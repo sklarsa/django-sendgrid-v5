@@ -61,6 +61,7 @@ legacy_tox_ini = """
         django{42}-py{39,310,311,312}-sendgrid{5,6}
         django{5}-py{310,311,312}-sendgrid{5,6}
         django{51}-py{310,311,312,313}-sendgrid{5,6}
+        django{52}-py{310,311,312,313}-sendgrid{5,6}
 
     [gh]
     python =
@@ -75,6 +76,7 @@ legacy_tox_ini = """
         django42: Django>=4.2,<4.3
         django5: Django>=5.0,<5.1
         django51: Django>=5.1,<5.2
+        django52: Django>=5.2,<5.3
         sendgrid5: sendgrid>=5,<6
         sendgrid6: sendgrid>=6,<7
         starkbank-ecdsa
