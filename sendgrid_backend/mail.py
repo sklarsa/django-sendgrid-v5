@@ -93,10 +93,15 @@ class SendgridBackend(BaseEmailBackend):
         self.sg = SendGridAPIClient(**sg_args)
 
         # Configure sandbox mode based on settings
+        # SENDGRID_SANDBOX_MODE takes precedence and enables sandbox mode unconditionally
+        # SENDGRID_SANDBOX_MODE_IN_DEBUG only enables sandbox mode when DEBUG=True
+        sandbox_mode = get_django_setting("SENDGRID_SANDBOX_MODE", False)
         sandbox_mode_in_debug = get_django_setting(
             "SENDGRID_SANDBOX_MODE_IN_DEBUG", True
         )
-        self.sandbox_mode = bool(settings.DEBUG) and bool(sandbox_mode_in_debug)
+        self.sandbox_mode = bool(sandbox_mode) or (
+            bool(settings.DEBUG) and bool(sandbox_mode_in_debug)
+        )
 
         if self.sandbox_mode:
             warnings.warn(
