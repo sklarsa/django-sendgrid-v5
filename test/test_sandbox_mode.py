@@ -39,7 +39,9 @@ class TestSandboxMode(SimpleTestCase):
 
         # SENDGRID_SANDBOX_MODE=True takes precedence over SENDGRID_SANDBOX_MODE_IN_DEBUG=False
         with override_settings(
-            DEBUG=False, SENDGRID_SANDBOX_MODE=True, SENDGRID_SANDBOX_MODE_IN_DEBUG=False
+            DEBUG=False,
+            SENDGRID_SANDBOX_MODE=True,
+            SENDGRID_SANDBOX_MODE_IN_DEBUG=False,
         ):
             backend = SendgridBackend(api_key="stub")
             self.assertTrue(backend.sandbox_mode)
