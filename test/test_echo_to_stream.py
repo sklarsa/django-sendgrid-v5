@@ -1,4 +1,5 @@
 import warnings
+from http import HTTPStatus
 from unittest.mock import MagicMock
 
 from django.core.mail import EmailMessage
@@ -10,7 +11,7 @@ from sendgrid_backend.mail import SendgridBackend
 
 
 class TestEchoToOutput(SimpleTestCase):
-    def test_echo(self):
+    def test_echo(self) -> None:
         settings = {
             "DEBUG": True,
             "SENDGRID_API_KEY": "DOESNT_MATTER",
@@ -38,3 +39,5 @@ class TestEchoToOutput(SimpleTestCase):
                     + "request to succeed."
                 )
             self.assertTrue(mocked_output_stream.write.called)
+            self.assertEqual(msg.extra_headers["status"], HTTPStatus.UNAUTHORIZED)
+            self.assertIn("error", msg.extra_headers)

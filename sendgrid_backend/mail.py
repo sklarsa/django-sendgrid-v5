@@ -187,11 +187,13 @@ class SendgridBackend(BaseEmailBackend):
                     logger.warning("No x_message_id header received from sendgrid api")
                 success += 1
                 fail_flag = False
-            except HTTPError as e:
-                message = getattr(e, "body", None)
+            except HTTPError as err:
+                message = err.body.decode()
+                msg.extra_headers["status"] = err.status_code
+                msg.extra_headers["error"] = message
                 logger.error(
                     "Failed to send email, error: {}, response body: {}".format(
-                        e, message
+                        err, message
                     )
                 )
                 if not self.fail_silently:
